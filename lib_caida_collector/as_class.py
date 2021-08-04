@@ -35,7 +35,7 @@ class AS:
     def stub(self):
         """Returns True if AS is a stub by RFC1772"""
 
-        if len(self.peers) + len(self.customers) + len(providers) == 1:
+        if len(self.peers) + len(self.customers) + len(self.providers) == 1:
             return True
         else:
             return False

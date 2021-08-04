@@ -1,9 +1,12 @@
+from lib_database import GenericTable
+
+
 class ASesTable(GenericTable):
     name = "ases"
     id_col = None
 
     def create_table(self):
-        sql = """CREATE UNLOGGED TABLE {self.name}(
+        sql = f"""CREATE UNLOGGED TABLE IF NOT EXISTS {self.name}(
               asn BIGINT UNIQUE,
               peers BIGINT[],
               customers BIGINT[],

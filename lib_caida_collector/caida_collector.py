@@ -1,7 +1,6 @@
 import bz2
 from typing import List, Dict
 
-from lib_database import db_utils
 from lib_utils import file_funcs, helper_funcs
 
 from .as_class import AS
@@ -21,9 +20,10 @@ class CaidaCollector:
 
         url = url if url else self._get_url()
         file_lines = self._read_file(url)
-        ases = self._get_ases(file_lines)
+        ases: List[AS] = self._get_ases(file_lines)
         # Insert into database
-        db_utils.rows_to_db([x.db_row for x in ases], ASesTable)
+        with ASesTable(clear=True) as db:
+            db.bulk_insert([x.db_row for x in ases])
 
     def _get_url(self) -> str:
         """Gets urls to download relationship files"""
@@ -42,7 +42,7 @@ class CaidaCollector:
             # Unzip and read
             with bz2.open(path) as f:
                 # Decode bytes into str
-                return [x.decode() for x in f.readlines()]
+                return [x.decode().strip() for x in f.readlines()]
 
     def _get_ases(self, lines: List[str]) -> List[AS]:
         """Fills the initial AS dict and adds the following info:
@@ -66,8 +66,7 @@ class CaidaCollector:
                 # Extract all peers
                 else:
                     self._extract_peers(line, ases)
-            else:
-                raise Exception("More lines than expected?")
+        return ases.values()
 
     def _extract_input_clique(self, line: str, ases: Dict[int, AS]):
         """Adds all ASNs within input clique line to ases dict"""
@@ -80,7 +79,7 @@ class CaidaCollector:
             # Insert AS into graph
             ases[int(asn)] = AS(int(asn), input_clique=True)
 
-    def _extract_ixp_ases(line: str, ases: Dict[int, AS]):
+    def _extract_ixp_ases(self, line: str, ases: Dict[int, AS]):
         """Adds all ASNs that are detected IXPs to ASes dict"""
 
         # Get all IXPs that Caida lists
@@ -95,7 +94,7 @@ class CaidaCollector:
     def _extract_provider_customers(self, line: str, ases: Dict[int, AS]):
         """Extracts provider customers: <provider-as>|<customer-as>|-1"""
 
-        provider_asn, customer_asn, _ = line.split("|")
+        provider_asn, customer_asn, _, source = line.split("|")
         provider_asn, customer_asn = int(provider_asn), int(customer_asn)
 
         # Insert ASes if they do not exist
