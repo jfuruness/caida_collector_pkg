@@ -1,14 +1,15 @@
 import bz2
+from typing import List, Dict
 
+from lib_database import db_utils
 from lib_utils import file_funcs, helper_funcs
 
 from .as_class import AS
+from .tables import ASesTable
 
 
 class CaidaCollector:
     """Downloads relationships, determines metadata, and inserts to db"""
-
-    
 
     def run(self, url=None):
         """Downloads relationships, parses data, and inserts into the db.
@@ -21,9 +22,10 @@ class CaidaCollector:
         url = url if url else self._get_url()
         file_lines = self._read_file(url)
         ases = self._get_ases(file_lines)
-        self._assign_ranks(ases)
+        # Insert into database
+        db_utils.rows_to_db([x.db_row for x in ases], ASesTable)
 
-    def _get_url(self):
+    def _get_url(self) -> str:
         """Gets urls to download relationship files"""
 
         # Api url
@@ -31,7 +33,7 @@ class CaidaCollector:
         # Get all html tags that might have links, and return the third to last
         return prepend + helper_funcs.get_tags(prepend, 'a')[-3]["href"]
 
-    def _read_file(self, url) -> list:
+    def _read_file(self, url: str) -> List[str]:
         """Reads the file from the URL and unzips it and returns the lines"""
 
         # Delete path, and delete again when out of scope
@@ -42,7 +44,7 @@ class CaidaCollector:
                 # Decode bytes into str
                 return [x.decode() for x in f.readlines()]
 
-    def _get_ases(self, lines):
+    def _get_ases(self, lines: List[str]) -> List[AS]:
         """Fills the initial AS dict and adds the following info:
 
         Creates AS dict with peers, providers, customers, input clique, ixps
@@ -67,7 +69,7 @@ class CaidaCollector:
             else:
                 raise Exception("More lines than expected?")
 
-    def _extract_input_clique(self, line, ases):
+    def _extract_input_clique(self, line: str, ases: Dict[int, AS]):
         """Adds all ASNs within input clique line to ases dict"""
 
         # Gets all input ASes for clique
@@ -78,7 +80,7 @@ class CaidaCollector:
             # Insert AS into graph
             ases[int(asn)] = AS(int(asn), input_clique=True)
 
-    def _extract_ixp_ases(line, ases):
+    def _extract_ixp_ases(line: str, ases: Dict[int, AS]):
         """Adds all ASNs that are detected IXPs to ASes dict"""
 
         # Get all IXPs that Caida lists
@@ -90,7 +92,7 @@ class CaidaCollector:
             # Insert IXP
             ases[int(asn)] = AS(int(asn), ixp=True)
 
-    def _extract_provider_customers(self, line, ases):
+    def _extract_provider_customers(self, line: str, ases: Dict[int, AS]):
         """Extracts provider customers: <provider-as>|<customer-as>|-1"""
 
         provider_asn, customer_asn, _ = line.split("|")
@@ -106,7 +108,7 @@ class CaidaCollector:
         ases[provider_asn].customers.add(ases[customer_asn])
         ases[customer_asn].providers.add(ases[provider_asn])
 
-    def _extract_peers(self, line, ases):
+    def _extract_peers(self, line: str, ases: Dict[int, AS]):
         """Extracts peers: <peer-as>|<peer-as>|0|<source>"""
 
         peer1_asn, peer2_asn, _, source = line.split("|")
@@ -120,25 +122,3 @@ class CaidaCollector:
         # Add relationships
         ases[peer_asn1].peers.add(ases[peer_asn2])
         ases[peer_asn2].peers.add(ases[peer_asn1])
-
-    def assign_ranks(self, ases):
-        """Caida always publishes a DAG, for which we can assign ranks to
-
-        If we did not assign ranks, we would not have a good order
-        in which to choose announcements to propogate. We'd need a
-        state machine, where every announcement propogates on it's own,
-        until the graph does not change.
-        Instead, we can propogate everything at once, only once. Because
-        we can start at the lowest ASNs, and propogate up, sideways, and down
-        To do this we assign ranks, starting from the bottom
-        """
-
-        stubs = [x for x in ases if x.stub]
-        for stub in stubs:
-            self._assign_ranks_helper(stub, 0)
-
-    def _assign_ranks_helper(self, as_obj: AS, rank):
-        if as_obj.rank < rank:
-            as_obj.rank = rank
-            for provider in as_obj.providers:
-                self._assign_ranks_helper(provider, rank + 1)
