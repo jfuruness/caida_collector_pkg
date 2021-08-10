@@ -30,8 +30,8 @@ class CaidaCollector:
 
         # Api url
         prepend = 'http://data.caida.org/datasets/as-relationships/serial-2/'
-        # Get all html tags that might have links, and return the third to last
-        return prepend + helper_funcs.get_tags(prepend, 'a')[-3]["href"]
+        # Get all hrefs and return the third to last
+        return prepend + helper_funcs.get_hrefs(prepend)[-3]
 
     def _read_file(self, url: str) -> List[str]:
         """Reads the file from the URL and unzips it and returns the lines"""
