@@ -10,7 +10,7 @@ from .tables import ASesTable
 class CaidaCollector:
     """Downloads relationships, determines metadata, and inserts to db"""
 
-    def run(self, url=None):
+    def run(self, url=None, tsv_path="/ssd/rel/rel.tsv", database=False):
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
@@ -21,9 +21,12 @@ class CaidaCollector:
         url = url if url else self._get_url()
         file_lines = self._read_file(url)
         ases: List[AS] = self._get_ases(file_lines)
-        # Insert into database
-        with ASesTable(clear=True) as db:
-            db.bulk_insert([x.db_row for x in ases])
+        file_funcs.makedirs("/".join(tsv_path.split("/")[:-1]))
+        file_funcs.write_dicts_to_tsv([x.db_row for x in ases], tsv_path)
+        if database:
+            # Insert into database
+            with ASesTable(clear=True) as db:
+                db.bulk_insert_tsv(tsv_path)
 
     def _get_url(self) -> str:
         """Gets urls to download relationship files"""
