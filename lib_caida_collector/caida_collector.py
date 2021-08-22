@@ -1,40 +1,39 @@
 import bz2
 from typing import List, Dict
 
-from lib_utils import file_funcs, helper_funcs
+from lib_utils import base_classes, file_funcs, helper_funcs
 
 from .as_class import AS
 from .tables import ASesTable
 
 
-class CaidaCollector:
+class CaidaCollector(base_classes.Base):
     """Downloads relationships, determines metadata, and inserts to db"""
 
-    def run(self, url=None, tsv_path="/ssd/rel/rel.tsv", database=False):
+    def run(self):
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
 
-        Can specify a URL if you want to download an older dataset
+        Can specify a download time if you want to download an older dataset
         """
 
-        url = url if url else self._get_url()
-        file_lines = self._read_file(url)
+        file_lines = self._read_file(self._get_url())
         ases: List[AS] = self._get_ases(file_lines)
-        file_funcs.makedirs("/".join(tsv_path.split("/")[:-1]))
-        file_funcs.write_dicts_to_tsv([x.db_row for x in ases], tsv_path)
-        if database:
+        file_funcs.write_dicts_to_tsv([x.db_row for x in ases], self.tsv_path)
+        if self.db:
             # Insert into database
             with ASesTable(clear=True) as db:
-                db.bulk_insert_tsv(tsv_path)
+                db.bulk_insert_tsv(self.tsv_path)
 
     def _get_url(self) -> str:
         """Gets urls to download relationship files"""
 
         # Api url
         prepend = 'http://data.caida.org/datasets/as-relationships/serial-2/'
-        # Get all hrefs and return the third to last
-        return prepend + helper_funcs.get_hrefs(prepend)[-3]
+        # Gets all URLs. Keeps only the link for the proper download time
+        return [prepend + x for x in helper_funcs.get_hrefs(prepend)
+                if self.dl_time.strftime("%Y%m01") in x][0]
 
     def _read_file(self, url: str) -> List[str]:
         """Reads the file from the URL and unzips it and returns the lines"""
