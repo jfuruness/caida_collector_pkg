@@ -1,6 +1,9 @@
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
 
+    __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
+                 "ixp", "as_rank", "propagation_rank"]
+
     def __init__(self, asn, input_clique=False, ixp=False):
         self.asn = asn
         self.peers = set()
@@ -9,27 +12,35 @@ class AS:
         # Read Caida's paper to understand these
         self.input_clique = input_clique
         self.ixp = ixp
+        # AS Rank from caida AS rank querier
+        self.as_rank = None
+        # Propagation rank. Rank leaves to clique
+        self.propagation_rank = None
 
     def __lt__(self, as_obj):
         if isinstance(as_obj, AS):
             return True if self.asn < as_obj.asn else False
-            
+        else:
+            raise NotImplementedError
+
+    def __hash__(self):
+        return hash(self.asn)
 
     @property
     def db_row(self):
         def asns(as_objs: list):
             return "{" + ",".join(str(x.asn) for x in sorted(as_objs)) + "}"
 
-        return {"asn": self.asn,
-                "peers": asns(self.peers),
-                "customers": asns(self.customers),
-                "providers": asns(self.providers),
-                "stubs": asns(self.stubs),
-                "stub": self.stub,
-                "multihomed": self.multihomed,
-                "transit": self.transit,
-                "input_clique": self.input_clique,
-                "ixp": self.ixp}
+        def _format(x):
+            if isinstance(x, list):
+                return asns(x)
+            elif x is None:
+                return ""
+            else:
+                return x
+
+        attrs = self.__slots__ + ["stubs", "stub", "multihomed", "transit"]
+        return {attr: _format(getattr(self, attr)) for attr in attrs}
 
     @property
     def stub(self):
