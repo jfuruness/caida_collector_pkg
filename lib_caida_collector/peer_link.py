@@ -1,11 +1,14 @@
+from .link import Link
+
+
 class PeerLink(Link):
     """Stores the info for a peer link"""
 
     def __init__(self, peer1_asn, peer2_asn):
         """Saves the link info"""
 
-        super(PeerLink, self).__init__()
         self.__peer_asns = tuple(sorted([int(peer1_asn), int(peer2_asn)]))
+        super(PeerLink, self).__init__()
 
     @property
     def peer_asns(self):

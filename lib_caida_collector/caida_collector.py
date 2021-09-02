@@ -1,12 +1,13 @@
 import bz2
+from tqdm import tqdm
 from typing import List, Dict
 
 from lib_utils import base_classes, file_funcs, helper_funcs
 
-from .as_class import AS
-from .bgpdag import BGPDAG
+from .base_as import AS
+from .bgp_dag import BGPDAG
 from .customer_provider_link import CustomerProviderLink as CPLink
-from .peer_link import CustomerProviderLink as PeerLink
+from .peer_link import PeerLink
 from .tables import ASesTable
 
 
@@ -28,13 +29,17 @@ class CaidaCollector(base_classes.Base):
 
         file_lines = self._read_file(self._get_url())
         cp_links, peer_links, ixps, input_clique = self._get_ases(file_lines)
-        bgp_dag = self.BGPDAGCls(cp_links,
+        bgp_dag = self.GraphCls(cp_links,
                                  peer_links,
-                                 ixps,
-                                 input_clique,
+                                 ixps=ixps,
+                                 input_clique=input_clique,
                                  BaseASCls=self.BaseASCls)
-        file_funcs.write_dicts_to_tsv([x.db_row for x in bgp_dag],
-                                      self.tsv_path)
+        print("made graph")
+        rows = []
+        for x in tqdm(bgp_dag.as_dict.values(), total=len(bgp_dag)):
+            rows.append(x.db_row)
+        file_funcs.write_dicts_to_tsv(rows, self.tsv_path)
+        print("wrote tsv")
         if self.db:
             # Insert into database
             with ASesTable(clear=True) as db:
@@ -97,21 +102,21 @@ class CaidaCollector(base_classes.Base):
         # Gets all input ASes for clique
         for asn in line.split(":")[-1].strip().split(" "):
             # Insert AS into graph
-            input_clique.add(asn)
+            input_clique.add(int(asn))
 
     def _extract_ixp_ases(self, line: str, ixps: set):
         """Adds all ASNs that are detected IXPs to ASes dict"""
 
         # Get all IXPs that Caida lists
         for asn in line.split(":")[-1].strip().split(" "):
-            ixps.add(asn)
+            ixps.add(int(asn))
 
     def _extract_provider_customers(self, line: str, cp_links: set):
         """Extracts provider customers: <provider-as>|<customer-as>|-1"""
 
         provider_asn, customer_asn, _, source = line.split("|")
         cp_links.add(CPLink(customer_asn=int(customer_asn),
-                            provider_asn=int(provider_asn))
+                            provider_asn=int(provider_asn)))
 
     def _extract_peers(self, line: str, peer_links: set):
         """Extracts peers: <peer-as>|<peer-as>|0|<source>"""

@@ -10,13 +10,12 @@ class CustomerProviderLink(Link):
         done using kwargs so that it errors if it's not passed in
         """
 
-        super(CustomerProviderLink, self).__init__()
-
         for kwarg in ["customer_asn", "provider_asn"]:
             assert kwarg in kwargs, f"Params missing {kwarg}"
 
         self.__customer_asn = int(kwargs["customer_asn"])
         self.__provider_asn = int(kwargs["provider_asn"])
+        super(CustomerProviderLink, self).__init__()
 
     @property
     def customer_asn(self):

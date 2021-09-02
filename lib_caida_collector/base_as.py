@@ -4,18 +4,27 @@ class AS:
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
                  "ixp", "as_rank", "propagation_rank"]
 
-    def __init__(self, asn, input_clique=False, ixp=False):
+    def __init__(self,
+                 asn,
+                 input_clique=False,
+                 ixp=False,
+                 peers=None,
+                 providers=None,
+                 customers=None,
+                 as_rank=None,
+                 propagation_rank=None):
+        assert isinstance(asn, int), asn
         self.asn = asn
-        self.peers = set()
-        self.customers = set()
-        self.providers = set()
+        self.peers = peers if peers is not None else set()
+        self.customers = customers if customers is not None else set()
+        self.providers = providers if providers is not None else set()
         # Read Caida's paper to understand these
         self.input_clique = input_clique
         self.ixp = ixp
         # AS Rank from caida AS rank querier
-        self.as_rank = None
+        self.as_rank = as_rank
         # Propagation rank. Rank leaves to clique
-        self.propagation_rank = None
+        self.propagation_rank = propagation_rank
 
     def __lt__(self, as_obj):
         if isinstance(as_obj, AS):
@@ -32,7 +41,7 @@ class AS:
             return "{" + ",".join(str(x.asn) for x in sorted(as_objs)) + "}"
 
         def _format(x):
-            if isinstance(x, list):
+            if isinstance(x, list) or isinstance(x, tuple):
                 return asns(x)
             elif x is None:
                 return ""
