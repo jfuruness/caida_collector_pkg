@@ -8,7 +8,6 @@ from .base_as import AS
 from .bgp_dag import BGPDAG
 from .customer_provider_link import CustomerProviderLink as CPLink
 from .peer_link import PeerLink
-from .tables import ASesTable
 
 
 class CaidaCollector(base_classes.Base):
@@ -40,10 +39,6 @@ class CaidaCollector(base_classes.Base):
             rows.append(x.db_row)
         file_funcs.write_dicts_to_tsv(rows, self.tsv_path)
         print("wrote tsv")
-        if self.db:
-            # Insert into database
-            with ASesTable(clear=True) as db:
-                db.bulk_insert_tsv(self.tsv_path)
 
         return bgp_dag
 
