@@ -37,6 +37,10 @@ class BGPDAG:
         self.propagation_ranks = self._get_propagation_ranks()
         print("got prop ranks")
         self._get_customer_cone_size()
+        sorted_by_cone_size = list(sorted(self.as_dict.values(), key=lambda x: x.customer_cone_size))
+        for as_obj in list(reversed(sorted_by_cone_size))[:20]:
+            print(as_obj.asn, as_obj.customer_cone_size)
+        
 
     def _gen_graph(self, cp_links, peer_links, ixps, input_clique, BaseAsCls):
         """Generates a graph of AS objects"""
@@ -122,22 +126,30 @@ class BGPDAG:
         """Gets the AS rank by customer cone, the same way Caida does it"""
 
         # Recursively assign the customer cone size
+        non_edges = []
+        cone_dict = {}
         for as_obj in self.as_dict.values():
-            self._get_cone_size_helper(as_obj)
+            if as_obj.stub or as_obj.multihomed:
+                as_obj.customer_cone_size = 0
+                cone_dict[as_obj.asn] = set()
+            else:
+                non_edges.append(as_obj)
+        for as_obj in tqdm(non_edges, total=len(non_edges), desc="determining customer cone"):
+            customer_cone = self._get_cone_size_helper(as_obj, cone_dict)
+            as_obj.customer_cone_size = len(customer_cone)
 
-    def _get_cone_size_helper(self, as_obj):
+    def _get_cone_size_helper(self, as_obj, cone_dict):
         """Recursively determines the cone size of an as"""
 
-        # Put here just to avoid repeating
-        if as_obj.customer_cone_size is not None:
-            return
+        if as_obj.asn in cone_dict:
+            return cone_dict[as_obj.asn]
         else:
-            agg_cone_size = 0
+            cone_dict[as_obj.asn] = set()
             for customer in as_obj.customers:
-                if customer.customer_cone_size is None:
-                    self._get_cone_size_helper(customer)
-                agg_cone_size += customer.customer_cone_size
-            as_obj.customer_cone_size = agg_cone_size
+                cone_dict[as_obj.asn].add(customer.asn)
+                self._get_cone_size_helper(customer, cone_dict)
+                cone_dict[as_obj.asn].update(cone_dict[customer.asn])
+        return cone_dict[as_obj.asn]
 
 ######################
 ### Iterator funcs ###
