@@ -2,7 +2,7 @@ class AS:
     """Autonomous System class. Contains attributes of an AS"""
 
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
-                 "ixp", "as_rank", "propagation_rank"]
+                 "ixp", "customer_cone_size", "propagation_rank"]
 
     def __init__(self,
                  asn,
@@ -11,7 +11,6 @@ class AS:
                  peers=None,
                  providers=None,
                  customers=None,
-                 as_rank=None,
                  propagation_rank=None):
         assert isinstance(asn, int), asn
         self.asn = asn
@@ -21,8 +20,7 @@ class AS:
         # Read Caida's paper to understand these
         self.input_clique = input_clique
         self.ixp = ixp
-        # AS Rank from caida AS rank querier
-        self.as_rank = as_rank
+        self.customer_cone_size = None
         # Propagation rank. Rank leaves to clique
         self.propagation_rank = propagation_rank
 

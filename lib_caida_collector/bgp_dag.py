@@ -4,7 +4,7 @@ from .base_as import AS
 
 
 class BGPDAG:
-    """BGP Topology. Must be a DAG"""
+    """BGP Topology from caida which is a DAG"""
 
     # Slots are used here to allow for fast access (1/3 faster)
     # And also because it allows others to easily see the instance attrs
@@ -30,13 +30,13 @@ class BGPDAG:
         # Remove duplicates from relationships and sort
         self._make_relationships_tuples()
         print("typles done")
-        # self._assert_dag()
         # Assign propagation rank to each AS
         self._assign_propagation_ranks()
         print("assigned prop ranks")
         # Get the ranks for the graph
         self.propagation_ranks = self._get_propagation_ranks()
         print("got prop ranks")
+        self._get_customer_cone_size()
 
     def _gen_graph(self, cp_links, peer_links, ixps, input_clique, BaseAsCls):
         """Generates a graph of AS objects"""
@@ -81,33 +81,11 @@ class BGPDAG:
             p2.peers.add(p1)
 
     def _make_relationships_tuples(self):
-        """Make relationships tuples and sort to preserve deterministic"""
+        """Make relationships tuples"""
         
         for as_obj in tqdm(self.as_dict.values(), total=len(self.as_dict)):
             for rels in ["peers", "customers", "providers"]:
                 setattr(as_obj, rels, tuple(getattr(as_obj, rels)))
-
-    def _assert_dag(self):
-        """Asserts that graph is a DAG for provider customers"""
-
-        # I know it could be done with dynamic programming. idc.
-        for asn, as_obj in self.as_dict.items():
-            # Make sure there are no provider or provider loops
-            for attr in ["customers", "providers"]:
-                self._assert_dag_helper(as_obj, set([as_obj.asn]), attr)
-            
-
-    def _assert_dag_helper(self, og_as_obj, set_of_asns: set, attr: str):
-        """Recursive func to make sure there are no cycles"""
-
-        for as_obj in getattr(og_as_obj, attr):
-            # Make sure we aren't cycling
-            assert as_obj.asn not in set_of_asns, "Not a DAG"
-            # Make a new set and add the current AS object to it
-            temp_set_of_asns = set_of_asns.copy()
-            temp_set_of_asns.add(as_obj.asn)
-            # Continue recursively searching
-            self._assert_dag_helper(as_obj, temp_set_of_asns, attr)
 
     def _assign_propagation_ranks(self):
         """Assigns propagation ranks from the leafs to input_clique"""
@@ -139,6 +117,27 @@ class BGPDAG:
             ranks[i] = tuple(sorted(rank))
         # Tuples are faster
         return tuple(ranks)
+
+    def _get_customer_cone_size(self):
+        """Gets the AS rank by customer cone, the same way Caida does it"""
+
+        # Recursively assign the customer cone size
+        for as_obj in self.as_dict.values():
+            self._get_cone_size_helper(as_obj)
+
+    def _get_cone_size_helper(self, as_obj):
+        """Recursively determines the cone size of an as"""
+
+        # Put here just to avoid repeating
+        if as_obj.customer_cone_size is not None:
+            return
+        else:
+            agg_cone_size = 0
+            for customer in as_obj.customers:
+                if customer.customer_cone_size is None:
+                    self._get_cone_size_helper(customer)
+                agg_cone_size += customer.customer_cone_size
+            as_obj.customer_cone_size = agg_cone_size
 
 ######################
 ### Iterator funcs ###
