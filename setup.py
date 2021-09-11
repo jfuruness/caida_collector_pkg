@@ -21,6 +21,7 @@ setup(
     python_requires=">=3.8",
     packages=find_packages(),
     install_requires=[
+        'lib_utils==0.1.8',
     ],
     classifiers=[
         'Environment :: Console',

@@ -1,4 +1,4 @@
-from tqdm import tqdm
+import logging
 
 from .base_as import AS
 
@@ -20,27 +20,25 @@ class BGPDAG:
         """Reads in relationship data from a TSV and generate graph"""
 
         self.as_dict = dict()
-        print("gen graph")
+        logging.debug("gen graph")
         # Just adds all ASes to the dict, and adds ixp/input_clique info
         self._gen_graph(cp_links, peer_links, ixps, input_clique, BaseASCls)
-        print("gen graph done")
+        logging.debug("gen graph done")
         # Adds references to all relationships
         self._add_relationships(cp_links, peer_links)
-        print("add rels done")
+        logging.debug("add rels done")
         # Remove duplicates from relationships and sort
         self._make_relationships_tuples()
-        print("typles done")
+        logging.debug("typles done")
         # Assign propagation rank to each AS
         self._assign_propagation_ranks()
-        print("assigned prop ranks")
+        logging.debug("assigned prop ranks")
         # Get the ranks for the graph
         self.propagation_ranks = self._get_propagation_ranks()
-        print("got prop ranks")
+        logging.debug("got prop ranks")
+        # Determine customer cones of all ases
         self._get_customer_cone_size()
-        sorted_by_cone_size = list(sorted(self.as_dict.values(), key=lambda x: x.customer_cone_size))
-        for as_obj in list(reversed(sorted_by_cone_size))[:20]:
-            print(as_obj.asn, as_obj.customer_cone_size)
-        
+        logging.debug("Customer cones complete")
 
     def _gen_graph(self, cp_links, peer_links, ixps, input_clique, BaseAsCls):
         """Generates a graph of AS objects"""
@@ -87,7 +85,7 @@ class BGPDAG:
     def _make_relationships_tuples(self):
         """Make relationships tuples"""
         
-        for as_obj in tqdm(self.as_dict.values(), total=len(self.as_dict)):
+        for as_obj in self.as_dict.values():
             for rels in ["peers", "customers", "providers"]:
                 setattr(as_obj, rels, tuple(getattr(as_obj, rels)))
 
@@ -134,7 +132,7 @@ class BGPDAG:
                 cone_dict[as_obj.asn] = set()
             else:
                 non_edges.append(as_obj)
-        for as_obj in tqdm(non_edges, total=len(non_edges), desc="determining customer cone"):
+        for as_obj in non_edges:
             customer_cone = self._get_cone_size_helper(as_obj, cone_dict)
             as_obj.customer_cone_size = len(customer_cone)
 
@@ -154,11 +152,6 @@ class BGPDAG:
 ######################
 ### Iterator funcs ###
 ######################
-
-# https://stackoverflow.com/a/7542261/8903959
-# Way too slow to use, can't do a list of all values at scale
-#    def __getitem__(self, index):
-#        return list(self.as_dict.values())[index]
 
     def __len__(self):
         return len(self.as_dict)

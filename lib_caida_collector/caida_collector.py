@@ -1,3 +1,5 @@
+import logging
+
 import bz2
 from tqdm import tqdm
 from typing import List, Dict
@@ -33,12 +35,12 @@ class CaidaCollector(base_classes.Base):
                                  ixps=ixps,
                                  input_clique=input_clique,
                                  BaseASCls=self.BaseASCls)
-        print("made graph")
+        logging.info("Made graph. Now writing to TSV")
         rows = []
-        for x in tqdm(bgp_dag.as_dict.values(), total=len(bgp_dag)):
+        for x in bgp_dag.as_dict.values():
             rows.append(x.db_row)
         file_funcs.write_dicts_to_tsv(rows, self.tsv_path)
-        print("wrote tsv")
+        logging.debug("Wrote TSV")
 
         return bgp_dag
 
