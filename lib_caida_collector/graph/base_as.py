@@ -5,13 +5,14 @@ class AS:
                  "ixp", "customer_cone_size", "propagation_rank"]
 
     def __init__(self,
-                 asn,
+                 asn: int,
                  input_clique=False,
                  ixp=False,
                  peers=None,
                  providers=None,
                  customers=None,
                  propagation_rank=None):
+
         assert isinstance(asn, int), asn
         self.asn = asn
         self.peers = peers if peers is not None else set()
@@ -26,7 +27,7 @@ class AS:
 
     def __lt__(self, as_obj):
         if isinstance(as_obj, AS):
-            return True if self.asn < as_obj.asn else False
+            return self.asn < as_obj.asn
         else:
             raise NotImplementedError
 
