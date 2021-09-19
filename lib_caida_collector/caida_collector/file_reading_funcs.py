@@ -7,8 +7,11 @@ import bz2
 from lib_utils import file_funcs, helper_funcs
 
 
-def _read_file(self, cache: bool) -> List[str]:
-    """Reads the file from the URL and unzips it and returns the lines"""
+def read_file(self, cache=True) -> List[str]:
+    """Reads the file from the URL and unzips it and returns the lines
+
+    Also caches the file for later calls
+    """
 
     cache_path = self.cache_dir / self.dl_time.strftime("%Y.%m.%d.txt")
 

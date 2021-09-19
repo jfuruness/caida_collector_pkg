@@ -20,7 +20,7 @@ class CaidaCollector(base_classes.Base):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def run(self, cache=True) -> BGPDAG:
+    def run(self, cache=True, tsv=True) -> BGPDAG:
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
@@ -29,18 +29,19 @@ class CaidaCollector(base_classes.Base):
         if cache is True it uses the downloaded file that was cached
         """
 
-        file_lines = self._read_file(cache)
+        file_lines = self.read_file(cache)
         cp_links, peer_links, ixps, input_clique = self._get_ases(file_lines)
         bgp_dag = self.GraphCls(cp_links,
                                 peer_links,
                                 ixps=ixps,
                                 input_clique=input_clique,
                                 BaseASCls=self.BaseASCls)
-        self._write_tsv(bgp_dag)
+        if tsv:
+            self._write_tsv(bgp_dag)
         return bgp_dag
 
     # File funcs
-    from .file_reading_funcs import _read_file
+    from .file_reading_funcs import read_file
     from .file_reading_funcs import _write_cache_file
     from .file_reading_funcs import _get_url
 
