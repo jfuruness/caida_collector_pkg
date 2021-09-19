@@ -1,8 +1,8 @@
 import logging
+from pathlib import Path
+from typing import List
 
 import bz2
-from tqdm import tqdm
-from typing import List, Dict
 
 from lib_utils import base_classes, file_funcs, helper_funcs
 
@@ -15,12 +15,19 @@ from .peer_link import PeerLink
 class CaidaCollector(base_classes.Base):
     """Downloads relationships, determines metadata, and inserts to db"""
 
-    def __init__(self, *args, BaseASCls=AS, GraphCls=BGPDAG, **kwargs):
+    def __init__(self,
+                 *args,
+                 BaseASCls=AS,
+                 GraphCls=BGPDAG,
+                 cache_dir=Path("/tmp/caida_collector_cache"),
+                 **kwargs):
         super(CaidaCollector, self).__init__(*args, **kwargs)
         self.BaseASCls = BaseASCls
         self.GraphCls = GraphCls
+        self.cache_dir = cache_dir
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def run(self):
+    def run(self, cache=True):
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
@@ -28,21 +35,49 @@ class CaidaCollector(base_classes.Base):
         Can specify a download time if you want to download an older dataset
         """
 
-        file_lines = self._read_file(self._get_url())
+        file_lines = self._read_file(cache)
         cp_links, peer_links, ixps, input_clique = self._get_ases(file_lines)
         bgp_dag = self.GraphCls(cp_links,
-                                 peer_links,
-                                 ixps=ixps,
-                                 input_clique=input_clique,
-                                 BaseASCls=self.BaseASCls)
-        logging.info("Made graph. Now writing to TSV")
-        rows = []
-        for x in bgp_dag.as_dict.values():
-            rows.append(x.db_row)
-        file_funcs.write_dicts_to_tsv(rows, self.tsv_path)
-        logging.debug("Wrote TSV")
-
+                                peer_links,
+                                ixps=ixps,
+                                input_clique=input_clique,
+                                BaseASCls=self.BaseASCls)
+        self._write_tsv(bgp_dag)
         return bgp_dag
+
+######################
+# File reading funcs #
+######################
+
+    def _read_file(self, cache: bool) -> List[str]:
+        """Reads the file from the URL and unzips it and returns the lines"""
+
+        cache_path = self.cache_dir / self.dl_time.strftime("%Y.%m.%d.txt")
+
+        if not cache_path.exists() or cache is False:
+            self._write_cache_file(cache_path)
+
+        with cache_path.open(mode="r") as f:
+            return [x.strip() for x in f.readlines()]
+
+    def _write_cache_file(self, cache_path: Path):
+        """Writes the downloaded file to the cache"""
+
+        logging.info("No file cached from Caida. Downloading Caida file now")
+        url = self._get_url()
+
+        path_str = str(self._dir / "download.bz2")
+        # Create a temp path for the bz2
+        with file_funcs.temp_path(path_str=path_str) as path:
+            file_funcs.download_file(url, path)
+            # Unzip and read
+            with bz2.open(path) as f:
+                # Decode bytes into str
+                data = [x.decode() for x in f.readlines()]
+        # Write the file to the cache path
+        with cache_path.open(mode="w") as f:
+            for line in data:
+                f.write(line)
 
     def _get_url(self) -> str:
         """Gets urls to download relationship files"""
@@ -53,16 +88,9 @@ class CaidaCollector(base_classes.Base):
         return [prepend + x for x in helper_funcs.get_hrefs(prepend)
                 if self.dl_time.strftime("%Y%m01") in x][0]
 
-    def _read_file(self, url: str) -> List[str]:
-        """Reads the file from the URL and unzips it and returns the lines"""
-
-        # Delete path, and delete again when out of scope
-        with file_funcs.temp_path(path_append=".bz2") as path:
-            file_funcs.download_file(url, path)
-            # Unzip and read
-            with bz2.open(path) as f:
-                # Decode bytes into str
-                return [x.decode().strip() for x in f.readlines()]
+########################
+# Graph building funcs #
+########################
 
     def _get_ases(self, lines: List[str]):
         """Fills the initial AS dict and adds the following info:
@@ -120,3 +148,15 @@ class CaidaCollector(base_classes.Base):
 
         peer1_asn, peer2_asn, _, source = line.split("|")
         peer_links.add(PeerLink(int(peer1_asn), int(peer2_asn)))
+
+    def _write_tsv(self, bgp_dag):
+        """Writes BGP DAG info to a TSV"""
+
+        logging.info("Made graph. Now writing to TSV")
+        rows = []
+        for x in bgp_dag.as_dict.values():
+            rows.append(x.db_row)
+        file_funcs.write_dicts_to_tsv(rows, self.tsv_path)
+        logging.debug("Wrote TSV")
+
+

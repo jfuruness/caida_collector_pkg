@@ -8,7 +8,7 @@ class BGPDAG:
 
     # Slots are used here to allow for fast access (1/3 faster)
     # And also because it allows others to easily see the instance attrs
-    __slots__ = ["as_dict", "propagation_ranks"]
+    __slots__ = ["as_dict", "propagation_ranks", "ases"]
 
     def __init__(self,
                  cp_links: set,
@@ -26,6 +26,8 @@ class BGPDAG:
         logging.debug("gen graph done")
         # Adds references to all relationships
         self._add_relationships(cp_links, peer_links)
+        # Used for iteration
+        self.ases = list(self.as_dict.values())
         logging.debug("add rels done")
         # Remove duplicates from relationships and sort
         self._make_relationships_tuples()
@@ -85,14 +87,14 @@ class BGPDAG:
     def _make_relationships_tuples(self):
         """Make relationships tuples"""
         
-        for as_obj in self.as_dict.values():
+        for as_obj in self:
             for rels in ["peers", "customers", "providers"]:
                 setattr(as_obj, rels, tuple(getattr(as_obj, rels)))
 
     def _assign_propagation_ranks(self):
         """Assigns propagation ranks from the leafs to input_clique"""
 
-        for as_obj in self.as_dict.values():
+        for as_obj in self:
             self._assign_ranks_helper(as_obj, 0)
 
     def _assign_ranks_helper(self, as_obj, rank):
@@ -108,11 +110,11 @@ class BGPDAG:
     def _get_propagation_ranks(self):
         """Orders ASes by rank"""
 
-        max_rank = max(x.propagation_rank for x in self.as_dict.values())
+        max_rank = max(x.propagation_rank for x in self)
         # Create a list of empty lists
         ranks = list(list() for _ in range(max_rank + 1))
         # Append the ASes into their proper rank
-        for as_obj in self.as_dict.values():
+        for as_obj in self:
             ranks[as_obj.propagation_rank].append(as_obj)
         # Sort the ASes for deterministic
         for i, rank in enumerate(ranks):
@@ -126,7 +128,7 @@ class BGPDAG:
         # Recursively assign the customer cone size
         non_edges = []
         cone_dict = {}
-        for as_obj in self.as_dict.values():
+        for as_obj in self:
             if as_obj.stub or as_obj.multihomed:
                 as_obj.customer_cone_size = 0
                 cone_dict[as_obj.asn] = set()
@@ -152,6 +154,10 @@ class BGPDAG:
 ######################
 ### Iterator funcs ###
 ######################
+
+    # https://stackoverflow.com/a/7542261/8903959
+    def __getitem__(self, index):
+        return self.ases[index]
 
     def __len__(self):
         return len(self.as_dict)
