@@ -19,6 +19,7 @@ class CaidaCollector(base_classes.Base):
         self.GraphCls = GraphCls
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_path = self.cache_dir / self.dl_time.strftime("%Y.%m.%d")
 
     def run(self, cache=True, tsv=True) -> BGPDAG:
         """Downloads relationships, parses data, and inserts into the db.

@@ -13,16 +13,14 @@ def read_file(self, cache=True) -> List[str]:
     Also caches the file for later calls
     """
 
-    cache_path = self.cache_dir / self.dl_time.strftime("%Y.%m.%d.txt")
+    if not self.cache_path.exists() or cache is False:
+        self._write_cache_file()
 
-    if not cache_path.exists() or cache is False:
-        self._write_cache_file(cache_path)
-
-    with cache_path.open(mode="r") as f:
+    with self.cache_path.open(mode="r") as f:
         return [x.strip() for x in f.readlines()]
 
 
-def _write_cache_file(self, cache_path: Path):
+def _write_cache_file(self):
     """Writes the downloaded file to the cache"""
 
     logging.info("No file cached from Caida. Downloading Caida file now")
@@ -37,7 +35,7 @@ def _write_cache_file(self, cache_path: Path):
             # Decode bytes into str
             data = [x.decode() for x in f.readlines()]
     # Write the file to the cache path
-    with cache_path.open(mode="w") as f:
+    with self.cache_path.open(mode="w") as f:
         for line in data:
             f.write(line)
 

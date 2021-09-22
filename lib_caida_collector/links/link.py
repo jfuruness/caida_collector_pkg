@@ -15,6 +15,12 @@ class Link:
 
         return hash(self.asns)
 
+    def __eq__(self, other):
+        if isinstance(other, Link):
+            return self.asns == other.asns
+        else:
+            raise NotImplementedError
+
     def __lt__(self, other):
         if isinstance(other, Link):
             return self.__hash__() < other.__hash__()
