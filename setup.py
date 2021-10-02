@@ -18,7 +18,7 @@ setup(
     keywords=["Furuness", "BGP", "Caida", "Relationships", "AS-Serial",
               "Peers", "Customers", "Providers"],
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">=3.7",
     packages=find_packages(),
     install_requires=[
         'lib_utils>=0.2.1',
