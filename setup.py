@@ -9,7 +9,7 @@ setup(
     name='lib_caida_collector',
     author="Justin Furuness, Matt Jaccino, Tony Zheng",
     author_email="jfuruness@gmail.com",
-    version="0.0.2",
+    version="0.0.3",
     url='https://github.com/jfuruness/lib_caida_collector.git',
     license="BSD",
     description="Downloads Caida AS-Serial relationships into a database",
