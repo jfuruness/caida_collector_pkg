@@ -21,7 +21,7 @@ setup(
     python_requires=">=3.7",
     packages=find_packages(),
     install_requires=[
-        'lib_utils>=0.2.1',
+        'lib_utils @ git+ssh://git@github.com/jfuruness/lib_utils.git',
     ],
     classifiers=[
         'Environment :: Console',
