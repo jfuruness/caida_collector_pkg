@@ -10,6 +10,18 @@ class BGPDAG:
     # And also because it allows others to easily see the instance attrs
     __slots__ = ["as_dict", "propagation_ranks", "ases"]
 
+    yaml_tag = "!BGPDAG"
+
+    def __init_subclass__(cls, *args, **kwargs):
+        """This method essentially creates a list of all subclasses
+        This is allows us to easily assign yaml tags
+        """
+
+        super().__init_subclass__(*args, **kwargs)
+        # Fix this later once the system test framework is updated
+        cls.yaml_tag = f"!{cls}"
+
+
     def __init__(self,
                  cp_links: set,
                  peer_links: set,
@@ -42,6 +54,27 @@ class BGPDAG:
         self._get_customer_cone_size()
         logging.debug("Customer cones complete")
 
+    @property
+    def yaml_mapping(self):
+        input("Recursively do this so you can unmap it easily")
+        return {as_obj.asn: as_obj  for as_obj in self}
+
+    @classmethod
+    def to_yaml(cls, representer, node):
+        input("Do this recursively")
+        return representer.represent_mapping(cls.yaml_tag, node.yaml_mapping)
+
+    @classmethod
+    def from_yaml(cls, constructor, node):
+        for as_obj_node in node.value:
+            input(as_obj_node.from_yaml())
+
+        # https://stackoverflow.com/a/51827378/8903959
+        data = CommentedMap()
+        ases = constructor.construct_mapping(node, data)
+        as_dictconstructor.construct_sequence(node)
+        input("Do this recursively, properly")
+
 
     # Graph building functionality
     from .graph_building_funcs import _gen_graph
@@ -56,7 +89,7 @@ class BGPDAG:
     # Customer cone funcs
     from .customer_cone_funcs import _get_customer_cone_size
     from .customer_cone_funcs import _get_cone_size_helper
-    
+
 ##################
 # Iterator funcs #
 ##################

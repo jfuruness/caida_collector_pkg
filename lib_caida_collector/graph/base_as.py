@@ -1,16 +1,31 @@
+from ruamel.yaml.comments import CommentedMap
+
+
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
 
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
                  "ixp", "customer_cone_size", "propagation_rank"]
 
+    yaml_tag = "!AS"
+
+    def __init_subclass__(cls, *args, **kwargs):
+        """This method essentially creates a list of all subclasses
+        This is allows us to easily assign yaml tags
+        """
+
+        super().__init_subclass__(*args, **kwargs)
+        # Fix this later once the system test framework is updated
+        cls.yaml_tag = f"!{cls}"
+
     def __init__(self,
-                 asn: int,
+                 asn: int = None,
                  input_clique=False,
                  ixp=False,
                  peers=None,
                  providers=None,
                  customers=None,
+                 customer_cone_size=None,
                  propagation_rank=None):
 
         assert isinstance(asn, int), asn
@@ -80,3 +95,29 @@ class AS:
         """Returns a list of any stubs connected to that AS"""
 
         return [x for x in self.customers if x.stub]
+
+##############
+# Yaml funcs #
+##############
+
+    @property
+    def yaml_mapping(self):
+         return {"asn": self.asn,
+                 "customers": [x.asn for x in self.customers],
+                 "peers": [x.asn for x in self.peers],
+                 "providers": [x.asn for x in self.customers],
+                 "input_clique": self.input_clique,
+                 "ixp": self.ixp,
+                 "customer_cone_size": self.customer_cone_size,
+                 "propagation_rank": self.propagation_rank}
+
+    @classmethod
+    def to_yaml(cls, representer, node):
+        return representer.represent_mapping(cls.yaml_tag, node.yaml_mapping)
+
+    @classmethod
+    def from_yaml(cls, constructor, node):
+        # https://stackoverflow.com/a/51827378/8903959
+        data = CommentedMap()
+        constructor.construct_mapping(node, data)
+        return cls(**data)
