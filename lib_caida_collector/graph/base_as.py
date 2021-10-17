@@ -1,7 +1,8 @@
-from ruamel.yaml.comments import CommentedMap
+from yamlable import yaml_info, YamlAble
 
 
-class AS:
+@yaml_info(yaml_tag_ns='lib_caida_collector')
+class AS(YamlAble):
     """Autonomous System class. Contains attributes of an AS"""
 
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
@@ -16,7 +17,7 @@ class AS:
 
         super().__init_subclass__(*args, **kwargs)
         # Fix this later once the system test framework is updated
-        cls.yaml_tag = f"!{cls}"
+        cls.yaml_tag = f"!{cls.__name__}"
 
     def __init__(self,
                  asn: int = None,
@@ -36,7 +37,7 @@ class AS:
         # Read Caida's paper to understand these
         self.input_clique = input_clique
         self.ixp = ixp
-        self.customer_cone_size = None
+        self.customer_cone_size = customer_cone_size
         # Propagation rank. Rank leaves to clique
         self.propagation_rank = propagation_rank
 
@@ -100,24 +101,19 @@ class AS:
 # Yaml funcs #
 ##############
 
-    @property
-    def yaml_mapping(self):
-         return {"asn": self.asn,
-                 "customers": [x.asn for x in self.customers],
-                 "peers": [x.asn for x in self.peers],
-                 "providers": [x.asn for x in self.customers],
-                 "input_clique": self.input_clique,
-                 "ixp": self.ixp,
-                 "customer_cone_size": self.customer_cone_size,
-                 "propagation_rank": self.propagation_rank}
+    def __to_yaml_dict__(self):
+        """ This optional method is called when you call yaml.dump()"""
+        return {"asn": self.asn,
+                "customers": [x.asn for x in self.customers],
+                "peers": [x.asn for x in self.peers],
+                "providers": [x.asn for x in self.customers],
+                "input_clique": self.input_clique,
+                "ixp": self.ixp,
+                "customer_cone_size": self.customer_cone_size,
+                "propagation_rank": self.propagation_rank}
 
     @classmethod
-    def to_yaml(cls, representer, node):
-        return representer.represent_mapping(cls.yaml_tag, node.yaml_mapping)
+    def __from_yaml_dict__(cls, dct, yaml_tag):
+        """ This optional method is called when you call yaml.load()"""
 
-    @classmethod
-    def from_yaml(cls, constructor, node):
-        # https://stackoverflow.com/a/51827378/8903959
-        data = CommentedMap()
-        constructor.construct_mapping(node, data)
-        return cls(**data)
+        return cls(**dct)

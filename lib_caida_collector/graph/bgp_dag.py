@@ -1,9 +1,12 @@
 import logging
 
+import yaml
+from yamlable import yaml_info, YamlAble
+
 from .base_as import AS
 
-
-class BGPDAG:
+@yaml_info(yaml_tag_ns="lib_caida_collector.graph.bgp_dag")
+class BGPDAG(YamlAble):
     """BGP Topology from caida which is a DAG"""
 
     # Slots are used here to allow for fast access (1/3 faster)
@@ -19,7 +22,7 @@ class BGPDAG:
 
         super().__init_subclass__(*args, **kwargs)
         # Fix this later once the system test framework is updated
-        cls.yaml_tag = f"!{cls}"
+        cls.yaml_tag = f"!{cls.__name__}"
 
 
     def __init__(self,
@@ -28,52 +31,47 @@ class BGPDAG:
                  ixps=set(),
                  input_clique=set(),
                  BaseASCls=AS,
+                 yaml_as_dict: dict=None,
                  ):
         """Reads in relationship data from a TSV and generate graph"""
 
-        self.as_dict = dict()
-        logging.debug("gen graph")
-        # Just adds all ASes to the dict, and adds ixp/input_clique info
-        self._gen_graph(cp_links, peer_links, ixps, input_clique, BaseASCls)
-        logging.debug("gen graph done")
-        # Adds references to all relationships
-        self._add_relationships(cp_links, peer_links)
-        # Used for iteration
-        self.ases = list(self.as_dict.values())
-        logging.debug("add rels done")
-        # Remove duplicates from relationships and sort
-        self._make_relationships_tuples()
-        logging.debug("typles done")
-        # Assign propagation rank to each AS
-        self._assign_propagation_ranks()
-        logging.debug("assigned prop ranks")
-        # Get the ranks for the graph
-        self.propagation_ranks = self._get_propagation_ranks()
-        logging.debug("got prop ranks")
-        # Determine customer cones of all ases
-        self._get_customer_cone_size()
-        logging.debug("Customer cones complete")
 
-    @property
-    def yaml_mapping(self):
-        input("Recursively do this so you can unmap it easily")
-        return {as_obj.asn: as_obj  for as_obj in self}
+        if yaml_as_dict is not None:
+            self.as_dict = yaml_as_dict
+            # Convert ASNs to refs
+            for as_obj in self.as_dict.values():
+                as_obj.peers = tuple([self.as_dict[asn] for asn in as_obj.peers])
+                as_obj.customers = tuple([self.as_dict[asn] for asn in as_obj.customers])
+                as_obj.providers = tuple([self.as_dict[asn] for asn in as_obj.providers])
 
-    @classmethod
-    def to_yaml(cls, representer, node):
-        input("Do this recursively")
-        return representer.represent_mapping(cls.yaml_tag, node.yaml_mapping)
 
-    @classmethod
-    def from_yaml(cls, constructor, node):
-        for as_obj_node in node.value:
-            input(as_obj_node.from_yaml())
+            # Used for iteration
+            self.ases = list(self.as_dict.values())
+            self.propagation_ranks = self._get_propagation_ranks()
 
-        # https://stackoverflow.com/a/51827378/8903959
-        data = CommentedMap()
-        ases = constructor.construct_mapping(node, data)
-        as_dictconstructor.construct_sequence(node)
-        input("Do this recursively, properly")
+        else:
+            self.as_dict = dict()
+            logging.debug("gen graph")
+            # Just adds all ASes to the dict, and adds ixp/input_clique info
+            self._gen_graph(cp_links, peer_links, ixps, input_clique, BaseASCls)
+            logging.debug("gen graph done")
+            # Adds references to all relationships
+            self._add_relationships(cp_links, peer_links)
+            # Used for iteration
+            self.ases = list(self.as_dict.values())
+            logging.debug("add rels done")
+            # Remove duplicates from relationships and sort
+            self._make_relationships_tuples()
+            logging.debug("typles done")
+            # Assign propagation rank to each AS
+            self._assign_propagation_ranks()
+            logging.debug("assigned prop ranks")
+            # Get the ranks for the graph
+            self.propagation_ranks = self._get_propagation_ranks()
+            logging.debug("got prop ranks")
+            # Determine customer cones of all ases
+            self._get_customer_cone_size()
+            logging.debug("Customer cones complete")
 
 
     # Graph building functionality
@@ -89,6 +87,23 @@ class BGPDAG:
     # Customer cone funcs
     from .customer_cone_funcs import _get_customer_cone_size
     from .customer_cone_funcs import _get_cone_size_helper
+
+##############
+# Yaml funcs #
+##############
+
+    def __to_yaml_dict__(self):
+        """Optional method called when yaml.dump is called"""
+
+        return {asn: yaml.dump(as_obj) for asn, as_obj in self.as_dict.items()}
+
+    @classmethod
+    def __from_yaml_dict__(cls, dct, yaml_tag):
+        """Optional method called when yaml.load is called"""
+        as_dict_no_ref = {asn: yaml.safe_load(as_obj_yaml)
+                          for asn, as_obj_yaml in dct.items()}
+
+        return cls(None, None, yaml_as_dict=as_dict_no_ref)
 
 ##################
 # Iterator funcs #

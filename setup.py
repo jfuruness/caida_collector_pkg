@@ -22,6 +22,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'lib_utils @ git+ssh://git@github.com/jfuruness/lib_utils.git',
+        'pyyaml',
+        'yamlable',
     ],
     classifiers=[
         'Environment :: Console',
