@@ -1,19 +1,17 @@
 import logging
 
 import yaml
-from yamlable import yaml_info, YamlAble
+from yamlable import yaml_info, YamlAble, yaml_info_decorate
 
 from .base_as import AS
 
-@yaml_info(yaml_tag_ns="lib_caida_collector.graph.bgp_dag")
+@yaml_info(yaml_tag="BGPDAG")
 class BGPDAG(YamlAble):
     """BGP Topology from caida which is a DAG"""
 
     # Slots are used here to allow for fast access (1/3 faster)
     # And also because it allows others to easily see the instance attrs
     __slots__ = ["as_dict", "propagation_ranks", "ases"]
-
-    yaml_tag = "!BGPDAG"
 
     def __init_subclass__(cls, *args, **kwargs):
         """This method essentially creates a list of all subclasses
@@ -22,8 +20,8 @@ class BGPDAG(YamlAble):
 
         super().__init_subclass__(*args, **kwargs)
         # Fix this later once the system test framework is updated
-        cls.yaml_tag = f"!{cls.__name__}"
-
+        #cls.yaml_tag = f"!{cls.__name__}"
+        yaml_info_decorate(cls, yaml_tag=cls.__name__)
 
     def __init__(self,
                  cp_links: set,
@@ -95,15 +93,13 @@ class BGPDAG(YamlAble):
     def __to_yaml_dict__(self):
         """Optional method called when yaml.dump is called"""
 
-        return {asn: yaml.dump(as_obj) for asn, as_obj in self.as_dict.items()}
+        return {asn: as_obj for asn, as_obj in self.as_dict.items()}
 
     @classmethod
     def __from_yaml_dict__(cls, dct, yaml_tag):
         """Optional method called when yaml.load is called"""
-        as_dict_no_ref = {asn: yaml.safe_load(as_obj_yaml)
-                          for asn, as_obj_yaml in dct.items()}
 
-        return cls(None, None, yaml_as_dict=as_dict_no_ref)
+        return cls(None, None, yaml_as_dict=dct)
 
 ##################
 # Iterator funcs #

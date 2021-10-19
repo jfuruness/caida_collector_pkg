@@ -1,14 +1,12 @@
-from yamlable import yaml_info, YamlAble
+from yamlable import yaml_info, YamlAble, yaml_info_decorate
 
 
-@yaml_info(yaml_tag_ns='lib_caida_collector')
+@yaml_info(yaml_tag='AS')
 class AS(YamlAble):
     """Autonomous System class. Contains attributes of an AS"""
 
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
                  "ixp", "customer_cone_size", "propagation_rank"]
-
-    yaml_tag = "!AS"
 
     def __init_subclass__(cls, *args, **kwargs):
         """This method essentially creates a list of all subclasses
@@ -17,7 +15,8 @@ class AS(YamlAble):
 
         super().__init_subclass__(*args, **kwargs)
         # Fix this later once the system test framework is updated
-        cls.yaml_tag = f"!{cls.__name__}"
+        #cls.yaml_tag = f"!{cls.__name__}"
+        yaml_info_decorate(cls, yaml_tag=cls.__name__)
 
     def __init__(self,
                  asn: int = None,
@@ -97,6 +96,12 @@ class AS(YamlAble):
 
         return [x for x in self.customers if x.stub]
 
+    @property
+    def neighbors(self):
+        """Returns customers + peers + providers"""
+
+        return self.customers + self.peers + self.providers
+
 ##############
 # Yaml funcs #
 ##############
@@ -106,7 +111,7 @@ class AS(YamlAble):
         return {"asn": self.asn,
                 "customers": [x.asn for x in self.customers],
                 "peers": [x.asn for x in self.peers],
-                "providers": [x.asn for x in self.customers],
+                "providers": [x.asn for x in self.providers],
                 "input_clique": self.input_clique,
                 "ixp": self.ixp,
                 "customer_cone_size": self.customer_cone_size,
@@ -115,5 +120,4 @@ class AS(YamlAble):
     @classmethod
     def __from_yaml_dict__(cls, dct, yaml_tag):
         """ This optional method is called when you call yaml.load()"""
-
         return cls(**dct)
