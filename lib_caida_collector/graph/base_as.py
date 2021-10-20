@@ -8,6 +8,9 @@ class AS(YamlAble):
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
                  "ixp", "customer_cone_size", "propagation_rank"]
 
+    subclass_to_name_dict = {}
+    name_to_subclass_dict = {}
+
     def __init_subclass__(cls, *args, **kwargs):
         """This method essentially creates a list of all subclasses
         This is allows us to easily assign yaml tags
@@ -17,6 +20,8 @@ class AS(YamlAble):
         # Fix this later once the system test framework is updated
         #cls.yaml_tag = f"!{cls.__name__}"
         yaml_info_decorate(cls, yaml_tag=cls.__name__)
+        cls.subclass_to_name_dict[cls] = cls.__name__
+        cls.name_to_subclass_dict[cls.__name__] = cls
 
     def __init__(self,
                  asn: int = None,
