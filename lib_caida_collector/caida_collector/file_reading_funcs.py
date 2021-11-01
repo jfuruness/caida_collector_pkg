@@ -26,7 +26,7 @@ def _write_cache_file(self):
     logging.info("No file cached from Caida. Downloading Caida file now")
     url = self._get_url()
 
-    path_str = str(self._dir / "download.bz2")
+    path_str = str(self.dir_ / "download.bz2")
     # Create a temp path for the bz2
     with file_funcs.temp_path(path_str=path_str) as path:
         file_funcs.download_file(url, path)
