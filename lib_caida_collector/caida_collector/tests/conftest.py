@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from pathlib import Path
 from shutil import copyfile
@@ -10,7 +11,7 @@ from ..caida_collector import CaidaCollector
 # https://stackoverflow.com/a/12233889/8903959
 file_path = os.path.abspath(__file__)
 example_dir = Path(file_path.replace("conftest.py", "examples"))
-
+_dl_time = datetime(2021, 9, 20)
 _html_path = example_dir / "serial_2.html"
 _bz2_path = example_dir / "20210901.as-rel2.txt.bz2"
 _decoded_path = example_dir / "20210901.as-rel2.decoded"
@@ -56,7 +57,9 @@ def mock_caida_collector(tmp_path):
 
     with patch("lib_utils.helper_funcs.requests.get", mocked_requests_get):
         with patch("lib_utils.file_funcs.download_file", mocked_download_file):
-            collector = CaidaCollector(_dir=tmp_path, _dir_exist_ok=True)
+            collector = CaidaCollector(dir_=tmp_path,
+                                       dir_exist_ok=True,
+                                       dl_time=_dl_time)
             collector.cache_path.unlink(missing_ok=True)
             collector.tsv_path.unlink(missing_ok=True)
             yield collector
@@ -68,7 +71,9 @@ def tmp_caida_collector(tmp_path):
     Also clears all paths
     """
 
-    collector = CaidaCollector(_dir=tmp_path, _dir_exist_ok=True)
+    collector = CaidaCollector(dir_=tmp_path,
+                               dir_exist_ok=True,
+                               dl_time=_dl_time)
     collector.cache_path.unlink(missing_ok=True)
     collector.tsv_path.unlink(missing_ok=True)
     return collector

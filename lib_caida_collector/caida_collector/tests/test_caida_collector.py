@@ -1,3 +1,4 @@
+from datetime import datetime
 from itertools import product
 
 import pytest
@@ -37,7 +38,6 @@ class TestCaidaCollector:
                 read_tester.test_write_cache_file(tmp_caida_collector)
 
         collector = mock_caida_collector if mock else tmp_caida_collector
-
         collector.run(cache=cache, tsv=tsv)
 
         if tsv:
