@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
+import shutil
 from typing import List
 
+from bs4 import BeautifulSoup as Soup
 import bz2
+import requests
 
-from lib_utils import file_funcs, helper_funcs
 
 
 def read_file(self, cache=True) -> List[str]:
@@ -24,27 +26,23 @@ def _write_cache_file(self):
     """Writes the downloaded file to the cache"""
 
     logging.info("No file cached from Caida. Downloading Caida file now")
-    url = self._get_url()
 
-    path_str = str(self.dir_ / "download.bz2")
-    # Create a temp path for the bz2
-    with file_funcs.temp_path(path_str=path_str) as path:
-        file_funcs.download_file(url, path)
-        # Unzip and read
-        with bz2.open(path) as f:
-            # Decode bytes into str
-            data = [x.decode() for x in f.readlines()]
-    # Write the file to the cache path
-    with self.cache_path.open(mode="w") as f:
-        for line in data:
-            f.write(line)
+    bz2_path = self.dir_ / "download.bz2"
 
+    self._download_bz2_file(self._get_url(), bz2_path)
 
-def _get_url(self) -> str:
-    """Gets urls to download relationship files"""
+    # Unzip and read
+    with bz2.open(bz2_path) as bz2_f, self.cache_path.open(mode="w") as cache_f:
+        # Must decode the bytes into strings
+        for bz2_line in bz2_f.readlines():
+            cache_f.write(bz2_line.decode())
 
-    # Api url
-    prepend = 'http://data.caida.org/datasets/as-relationships/serial-2/'
-    # Gets all URLs. Keeps only the link for the proper download time
-    return [prepend + x for x in helper_funcs.get_hrefs(prepend)
-            if self.dl_time.strftime("%Y%m01") in x][0]
+def _download_bz2_file(self, url, bz2_path):
+    """Downloads file"""
+
+    # https://stackoverflow.com/a/39217788/8903959
+    # Download the file
+    with requests.get(url, stream=True, timeout=60) as r:
+        r.raise_for_status()
+        with bz2_path.open(mode="wb") as f:
+            shutil.copyfileobj(r.raw, f)

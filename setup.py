@@ -21,7 +21,9 @@ setup(
     python_requires=">=3.7",
     packages=find_packages(),
     install_requires=[
-        'lib_utils @ git+ssh://git@github.com/jfuruness/lib_utils.git',
+        #'lib_utils @ git+ssh://git@github.com/jfuruness/lib_utils.git',
+        'bs4',
+        'requests',
         'pyyaml',
         'yamlable',
     ],

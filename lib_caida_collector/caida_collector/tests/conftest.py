@@ -39,6 +39,12 @@ def mocked_requests_get(*args, **kwargs):
             with open(_html_path, mode="r") as f:
                 self.text = f.read()
             self.status_code = 200
+        def __enter__(self, *args):
+            return self
+
+        def __exit__(self, *args):
+            return True
+
         def raise_for_status(*args, **kwargs):
             pass
         def close(*args, **kwargs):
@@ -46,7 +52,7 @@ def mocked_requests_get(*args, **kwargs):
 
     return MockResponse()
 
-def mocked_download_file(url: str, path: str):
+def mocked_download_file(self, url: str, path: str):
     copyfile(str(_bz2_path), path) 
 
 @pytest.fixture(scope="function")
@@ -55,8 +61,8 @@ def mock_caida_collector(tmp_path):
 
     Clears cache and tsv before yielding"""
 
-    with patch("lib_utils.helper_funcs.requests.get", mocked_requests_get):
-        with patch("lib_utils.file_funcs.download_file", mocked_download_file):
+    with patch("lib_caida_collector.caida_collector.html_funcs.requests.get", mocked_requests_get):
+        with patch("lib_caida_collector.caida_collector.CaidaCollector._download_bz2_file", mocked_download_file):
             collector = CaidaCollector(dir_=tmp_path,
                                        dir_exist_ok=True,
                                        dl_time=_dl_time)
