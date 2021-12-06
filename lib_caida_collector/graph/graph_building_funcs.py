@@ -1,7 +1,18 @@
 """Gontains functions needed to build graph and it's references"""
 
+from typing import List, Set
 
-def _gen_graph(self, cp_links, peer_links, ixps, input_clique, BaseAsCls):
+from .base_as import AS
+from ..links import CustomerProviderLink as CPLink
+from ..links import PeerLink
+
+
+def _gen_graph(self,
+               cp_links: Set[CPLink],
+               peer_links: Set[PeerLink],
+               ixps: List[int],
+               input_clique: List[int],
+               BaseAsCls: AS):
     """Generates a graph of AS objects"""
 
     msg = "Shouldn't have a customer-provider that is also a peer!"
@@ -23,7 +34,9 @@ def _gen_graph(self, cp_links, peer_links, ixps, input_clique, BaseAsCls):
         self.as_dict[asn].input_clique = True
 
 
-def _add_relationships(self, cp_links, peer_links):
+def _add_relationships(self,
+                       cp_links: Set[CPLink],
+                       peer_links: Set[PeerLink]):
     """Adds relationships to the graph as references"""
 
     for cp_link in cp_links:

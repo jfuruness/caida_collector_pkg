@@ -1,4 +1,7 @@
+from typing import Any, List, Optional, Tuple, TYPE_CHECKING
+
 from yamlable import yaml_info, YamlAble, yaml_info_decorate
+
 
 
 @yaml_info(yaml_tag='AS')
@@ -8,8 +11,8 @@ class AS(YamlAble):
     __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
                  "ixp", "customer_cone_size", "propagation_rank"]
 
-    subclass_to_name_dict = {}
-    name_to_subclass_dict = {}
+    subclass_to_name_dict: dict = {}
+    name_to_subclass_dict: dict = {}
 
     def __init_subclass__(cls, *args, **kwargs):
         """This method essentially creates a list of all subclasses
@@ -17,49 +20,50 @@ class AS(YamlAble):
         """
 
         super().__init_subclass__(*args, **kwargs)
-        # Fix this later once the system test framework is updated
-        #cls.yaml_tag = f"!{cls.__name__}"
         yaml_info_decorate(cls, yaml_tag=cls.__name__)
         cls.subclass_to_name_dict[cls] = cls.__name__
         cls.name_to_subclass_dict[cls.__name__] = cls
 
     def __init__(self,
-                 asn: int = None,
-                 input_clique=False,
-                 ixp=False,
+                 asn: Optional[int] = None,
+                 input_clique: bool = False,
+                 ixp: bool = False,
                  peers=None,
                  providers=None,
                  customers=None,
-                 customer_cone_size=None,
-                 propagation_rank=None):
+                 customer_cone_size: Optional[int] = None,
+                 propagation_rank: Optional[int] = None):
 
         assert isinstance(asn, int), asn
-        self.asn = asn
+        self.asn: Optional[int] = asn
+        # FOR DEVS: These are sets initially for speed
+        # But are later changed to tuples for immutability
+        # I'll fix that weirdness later
         self.peers = peers if peers is not None else set()
         self.customers = customers if customers is not None else set()
         self.providers = providers if providers is not None else set()
         # Read Caida's paper to understand these
-        self.input_clique = input_clique
-        self.ixp = ixp
-        self.customer_cone_size = customer_cone_size
+        self.input_clique: bool = input_clique
+        self.ixp: bool = ixp
+        self.customer_cone_size: Optional[int] = customer_cone_size
         # Propagation rank. Rank leaves to clique
-        self.propagation_rank = propagation_rank
+        self.propagation_rank: Optional[int] = propagation_rank
 
-    def __lt__(self, as_obj):
+    def __lt__(self, as_obj: Any):
         if isinstance(as_obj, AS):
             return self.asn < as_obj.asn
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __hash__(self):
         return hash(self.asn)
 
     @property
-    def db_row(self):
-        def asns(as_objs: list):
+    def db_row(self) -> dict:
+        def asns(as_objs: List["AS"]) -> str:
             return "{" + ",".join(str(x.asn) for x in sorted(as_objs)) + "}"
 
-        def _format(x):
+        def _format(x) -> str:
             if isinstance(x, list) or isinstance(x, tuple):
                 return asns(x)
             elif x is None:
@@ -71,35 +75,29 @@ class AS(YamlAble):
         return {attr: _format(getattr(self, attr)) for attr in attrs}
 
     @property
-    def stub(self):
+    def stub(self) -> bool:
         """Returns True if AS is a stub by RFC1772"""
 
-        if len(self.peers) + len(self.customers) + len(self.providers) == 1:
-            return True
-        else:
-            return False
+        return len(self.neighbors) == 1
 
     @property
-    def multihomed(self):
+    def multihomed(self) -> bool:
         """Returns True if AS is multihomed by RFC1772"""
 
-        if (len(self.customers) == 0
-                and len(self.peers) + len(self.providers) > 1):
-            return True
-        else:
-            return False
+        return (len(self.customers) == 0
+                and len(self.peers) + len(self.providers) > 1)
 
     @property
-    def transit(self):
+    def transit(self) -> bool:
         """Returns True if AS is a transit AS by RFC1772"""
 
-        return True if len(self.customers) > 1 else False
+        return len(self.customers) > 1
 
     @property
-    def stubs(self):
+    def stubs(self) -> Tuple["AS"]:
         """Returns a list of any stubs connected to that AS"""
 
-        return [x for x in self.customers if x.stub]
+        return tuple([x for x in self.customers if x.stub])
 
     @property
     def neighbors(self):
@@ -111,7 +109,7 @@ class AS(YamlAble):
 # Yaml funcs #
 ##############
 
-    def __to_yaml_dict__(self):
+    def __to_yaml_dict__(self) -> dict:
         """ This optional method is called when you call yaml.dump()"""
         return {"asn": self.asn,
                 "customers": [x.asn for x in self.customers],
@@ -123,6 +121,6 @@ class AS(YamlAble):
                 "propagation_rank": self.propagation_rank}
 
     @classmethod
-    def __from_yaml_dict__(cls, dct, yaml_tag):
+    def __from_yaml_dict__(cls, dct: dict, yaml_tag: str):
         """ This optional method is called when you call yaml.load()"""
         return cls(**dct)

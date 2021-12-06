@@ -1,7 +1,12 @@
-class Link:
+from abc import ABC, abstractmethod
+
+from typing import Any, Optional, Tuple
+
+
+class Link(ABC):
     """Contains a relationship link in a BGP topology"""
 
-    __slots__ = []
+    __slots__: Tuple[str, ...] = tuple()
 
     def __init__(self):
         # Make sure we have asns
@@ -10,19 +15,24 @@ class Link:
         # Make sure the asns is sorted
         assert tuple(sorted(self.asns)) == self.asns
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hashes used in sets"""
 
         return hash(self.asns)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         if isinstance(other, Link):
             return self.asns == other.asns
         else:
-            raise NotImplementedError
+            return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any):
         if isinstance(other, Link):
             return self.__hash__() < other.__hash__()
         else:
-            raise NotImplementedError
+            return NotImplemented
+
+    @property
+    @abstractmethod
+    def asns(self) -> Tuple[int, int]:
+        raise NotImplementedError

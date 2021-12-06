@@ -1,9 +1,10 @@
-from datetime import datetime
 from itertools import product
+from path import Path
 
 import pytest
 
 from .test_read_file_funcs import TestReadFileFuncs
+from ..caida_collector import CaidaCollector
 
 
 @pytest.mark.caida_collector_base_funcs
@@ -13,14 +14,14 @@ class TestCaidaCollector:
     @pytest.mark.parametrize("cache, cache_written, tsv, mock",
                              product(*[[True, False] for _ in range(4)]))
     def test_run(self,
-                 cache,
-                 cache_written,
-                 tsv,
-                 mock,
-                 mock_caida_collector,
-                 tmp_caida_collector,
-                 decoded_path,
-                 tmp_path):
+                 cache: True,
+                 cache_written: True,
+                 tsv: True,
+                 mock: True,
+                 mock_caida_collector: CaidaCollector,
+                 tmp_caida_collector: CaidaCollector,
+                 decoded_path: Path,
+                 tmp_path: Path):
         """Just runs with every possible param and cache
 
         test_run_manual_checks should replace this
@@ -42,7 +43,7 @@ class TestCaidaCollector:
 
         if tsv:
             assert collector.tsv_path.exists()
-        
+
     @pytest.mark.skip(reason="New hire work")
     def test_run_manual_checks(self):
         """Tests the run function

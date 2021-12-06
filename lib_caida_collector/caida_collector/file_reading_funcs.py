@@ -3,13 +3,11 @@ from pathlib import Path
 import shutil
 from typing import List
 
-from bs4 import BeautifulSoup as Soup
 import bz2
 import requests
 
 
-
-def read_file(self, cache=True) -> List[str]:
+def read_file(self, cache: bool = True) -> List[str]:
     """Reads the file from the URL and unzips it and returns the lines
 
     Also caches the file for later calls
@@ -27,17 +25,18 @@ def _write_cache_file(self):
 
     logging.info("No file cached from Caida. Downloading Caida file now")
 
-    bz2_path = self.dir_ / "download.bz2"
+    bz2_path: Path = self.dir_ / "download.bz2"
 
     self._download_bz2_file(self._get_url(), bz2_path)
 
     # Unzip and read
-    with bz2.open(bz2_path) as bz2_f, self.cache_path.open(mode="w") as cache_f:
+    with bz2.open(bz2_path) as bz2_f, self.cache_path.open(mode="w") as cachef:
         # Must decode the bytes into strings
         for bz2_line in bz2_f.readlines():
-            cache_f.write(bz2_line.decode())
+            cachef.write(bz2_line.decode())
 
-def _download_bz2_file(self, url, bz2_path):
+
+def _download_bz2_file(self, url: str, bz2_path: Path):
     """Downloads file"""
 
     # https://stackoverflow.com/a/39217788/8903959

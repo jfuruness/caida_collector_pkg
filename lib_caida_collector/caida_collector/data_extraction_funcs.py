@@ -1,21 +1,24 @@
-from typing import List
+from typing import List, Set, Tuple
 
 from ..links import CustomerProviderLink as CPLink
 from ..links import PeerLink
 
 
-def _get_ases(self, lines: List[str]):
+def _get_ases(self, lines: List[str]) -> Tuple[Set[CPLink],
+                                               Set[PeerLink],
+                                               Set[int],
+                                               Set[int]]:
     """Fills the initial AS dict and adds the following info:
 
     Creates AS dict with peers, providers, customers, input clique, ixps
     """
 
-    input_clique = set()
-    ixps = set()
+    input_clique: Set[int] = set()
+    ixps: Set[int] = set()
     # Customer provider links
-    cp_links = set()
+    cp_links: Set[CPLink] = set()
     # Peer links
-    peer_links = set()
+    peer_links: Set[PeerLink] = set()
     for line in lines:
         # Get Caida input clique. See paper on site for what this is
         if line.startswith("# input clique"):
@@ -34,7 +37,7 @@ def _get_ases(self, lines: List[str]):
     return cp_links, peer_links, ixps, input_clique
 
 
-def _extract_input_clique(self, line: str, input_clique: set):
+def _extract_input_clique(self, line: str, input_clique: Set[int]):
     """Adds all ASNs within input clique line to ases dict"""
 
     # Gets all input ASes for clique
@@ -43,7 +46,7 @@ def _extract_input_clique(self, line: str, input_clique: set):
         input_clique.add(int(asn))
 
 
-def _extract_ixp_ases(self, line: str, ixps: set):
+def _extract_ixp_ases(self, line: str, ixps: Set[int]):
     """Adds all ASNs that are detected IXPs to ASes dict"""
 
     # Get all IXPs that Caida lists
@@ -51,7 +54,7 @@ def _extract_ixp_ases(self, line: str, ixps: set):
         ixps.add(int(asn))
 
 
-def _extract_provider_customers(self, line: str, cp_links: set):
+def _extract_provider_customers(self, line: str, cp_links: Set[CPLink]):
     """Extracts provider customers: <provider-as>|<customer-as>|-1"""
 
     provider_asn, customer_asn, _, source = line.split("|")
@@ -59,7 +62,7 @@ def _extract_provider_customers(self, line: str, cp_links: set):
                         provider_asn=int(provider_asn)))
 
 
-def _extract_peers(self, line: str, peer_links: set):
+def _extract_peers(self, line: str, peer_links: Set[PeerLink]):
     """Extracts peers: <peer-as>|<peer-as>|0|<source>"""
 
     peer1_asn, peer2_asn, _, source = line.split("|")

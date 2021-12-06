@@ -1,5 +1,9 @@
 """Functions to determine customer cone size"""
 
+from typing import Dict
+
+from .base_as import AS
+
 
 def _get_customer_cone_size(self):
     """Gets the AS rank by customer cone, the same way Caida does it"""
@@ -18,7 +22,7 @@ def _get_customer_cone_size(self):
         as_obj.customer_cone_size = len(customer_cone)
 
 
-def _get_cone_size_helper(self, as_obj, cone_dict):
+def _get_cone_size_helper(self, as_obj: AS, cone_dict: Dict[int, set]) -> AS:
     """Recursively determines the cone size of an as"""
 
     if as_obj.asn in cone_dict:

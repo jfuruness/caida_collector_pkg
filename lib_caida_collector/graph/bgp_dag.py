@@ -1,9 +1,9 @@
 import logging
 
-import yaml
 from yamlable import yaml_info, YamlAble, yaml_info_decorate
 
 from .base_as import AS
+
 
 @yaml_info(yaml_tag="BGPDAG")
 class BGPDAG(YamlAble):
@@ -20,7 +20,6 @@ class BGPDAG(YamlAble):
 
         super().__init_subclass__(*args, **kwargs)
         # Fix this later once the system test framework is updated
-        #cls.yaml_tag = f"!{cls.__name__}"
         yaml_info_decorate(cls, yaml_tag=cls.__name__)
 
     def __init__(self,
@@ -29,19 +28,20 @@ class BGPDAG(YamlAble):
                  ixps=set(),
                  input_clique=set(),
                  BaseASCls=AS,
-                 yaml_as_dict: dict=None,
+                 yaml_as_dict: dict = None,
                  ):
         """Reads in relationship data from a TSV and generate graph"""
-
 
         if yaml_as_dict is not None:
             self.as_dict = yaml_as_dict
             # Convert ASNs to refs
             for as_obj in self.as_dict.values():
-                as_obj.peers = tuple([self.as_dict[asn] for asn in as_obj.peers])
-                as_obj.customers = tuple([self.as_dict[asn] for asn in as_obj.customers])
-                as_obj.providers = tuple([self.as_dict[asn] for asn in as_obj.providers])
-
+                as_obj.peers = tuple([self.as_dict[asn]
+                                      for asn in as_obj.peers])
+                as_obj.customers = tuple([self.as_dict[asn] for asn
+                                          in as_obj.customers])
+                as_obj.providers = tuple([self.as_dict[asn] for asn
+                                          in as_obj.providers])
 
             # Used for iteration
             self.ases = list(self.as_dict.values())
@@ -51,7 +51,11 @@ class BGPDAG(YamlAble):
             self.as_dict = dict()
             logging.debug("gen graph")
             # Just adds all ASes to the dict, and adds ixp/input_clique info
-            self._gen_graph(cp_links, peer_links, ixps, input_clique, BaseASCls)
+            self._gen_graph(cp_links,
+                            peer_links,
+                            ixps,
+                            input_clique,
+                            BaseASCls)
             logging.debug("gen graph done")
             # Adds references to all relationships
             self._add_relationships(cp_links, peer_links)
@@ -70,7 +74,6 @@ class BGPDAG(YamlAble):
             # Determine customer cones of all ases
             self._get_customer_cone_size()
             logging.debug("Customer cones complete")
-
 
     # Graph building functionality
     from .graph_building_funcs import _gen_graph
