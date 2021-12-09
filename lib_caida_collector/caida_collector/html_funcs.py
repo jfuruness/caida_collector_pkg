@@ -10,8 +10,12 @@ def _get_url(self) -> str:
     # Api url
     prepend: str = 'http://data.caida.org/datasets/as-relationships/serial-2/'
     # Gets all URLs. Keeps only the link for the proper download time
-    return [prepend + x for x in self._get_hrefs(prepend)
-            if self.dl_time.strftime("%Y%m01") in x][0]
+    urls = [prepend + x for x in self._get_hrefs(prepend)
+            if self.dl_time.strftime("%Y%m01") in x]
+    if len(urls) > 0:
+        return urls[0]  # type: ignore
+    else:
+        raise Exception("No Urls")
 
 
 def _get_hrefs(self, url: str) -> List[str]:

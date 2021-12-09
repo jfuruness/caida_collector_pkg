@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Set
 
 import pytest
 
@@ -82,7 +83,7 @@ class TestDataExtractionFuncs:
         ground_truth_input_clique = set([174, 209, 286, 701, 1239, 1299, 2828,
                                          2914, 3257, 3320, 3356, 3491, 5511,
                                          6453, 6461, 6762, 6830, 7018, 12956])
-        test_input_clique = set()
+        test_input_clique: Set[int] = set()
         # This is from the test bz2 file
         mock_caida_collector._extract_input_clique(line, test_input_clique)
         assert ground_truth_input_clique == test_input_clique
@@ -100,7 +101,7 @@ class TestDataExtractionFuncs:
                                  24115, 24990, 35054, 40633, 42476,
                                  43100, 47886, 48850, 50384, 55818,
                                  57463])
-        test_ixps = set()
+        test_ixps: Set[int] = set()
         # This is from the test bz2 file
         mock_caida_collector._extract_ixp_ases(line, test_ixps)
         assert ground_truth_ixps == test_ixps
@@ -110,7 +111,7 @@ class TestDataExtractionFuncs:
         """Tests that provider customers are extracted correctly"""
 
         line = "1|1898|-1|bgp"
-        test_cp_links = set()
+        test_cp_links: Set[CPLink] = set()
         ground_truth_cp_links = set([CPLink(provider_asn=1,
                                             customer_asn=1898)])
 
@@ -122,7 +123,7 @@ class TestDataExtractionFuncs:
         """Tests that peers are extracted correctly"""
 
         line = "1|8641|0|bgp"
-        test_peers = set()
+        test_peers: Set[PeerLink] = set()
         ground_truth_peers = set([PeerLink(1, 8641)])
 
         # This is from the test bz2 file

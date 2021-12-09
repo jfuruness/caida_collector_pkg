@@ -1,5 +1,5 @@
 from itertools import product
-from path import Path
+from pathlib import Path
 
 import pytest
 
@@ -14,14 +14,14 @@ class TestCaidaCollector:
     @pytest.mark.parametrize("cache, cache_written, tsv, mock",
                              product(*[[True, False] for _ in range(4)]))
     def test_run(self,
-                 cache: True,
-                 cache_written: True,
-                 tsv: True,
-                 mock: True,
                  mock_caida_collector: CaidaCollector,
                  tmp_caida_collector: CaidaCollector,
                  decoded_path: Path,
-                 tmp_path: Path):
+                 tmp_path: Path,
+                 cache: bool,
+                 cache_written: bool,
+                 tsv: bool,
+                 mock: bool):
         """Just runs with every possible param and cache
 
         test_run_manual_checks should replace this

@@ -61,7 +61,7 @@ def mocked_download_file(self, url: str, path: str):
 
 
 @pytest.fixture(scope="function")
-def mock_caida_collector(tmp_path: Path) -> CaidaCollector:
+def mock_caida_collector(tmp_path: Path):
     """Returns a CaidaCollector obj that has custom input files
 
     Clears cache and tsv before yielding"""
@@ -71,9 +71,9 @@ def mock_caida_collector(tmp_path: Path) -> CaidaCollector:
         with patch(("lib_caida_collector.caida_collector."
                     "CaidaCollector._download_bz2_file"),
                    mocked_download_file):
-            collector = CaidaCollector(dir_=tmp_path,
-                                       dir_exist_ok=True,
-                                       dl_time=_dl_time)
+            collector: CaidaCollector = CaidaCollector(dir_=tmp_path,
+                                                       dir_exist_ok=True,
+                                                       dl_time=_dl_time)
             collector.cache_path.unlink(missing_ok=True)
             collector.tsv_path.unlink(missing_ok=True)
             yield collector
@@ -86,9 +86,9 @@ def tmp_caida_collector(tmp_path: Path) -> CaidaCollector:
     Also clears all paths
     """
 
-    collector = CaidaCollector(dir_=tmp_path,
-                               dir_exist_ok=True,
-                               dl_time=_dl_time)
+    collector: CaidaCollector = CaidaCollector(dir_=tmp_path,
+                                               dir_exist_ok=True,
+                                               dl_time=_dl_time)
     collector.cache_path.unlink(missing_ok=True)
     collector.tsv_path.unlink(missing_ok=True)
     return collector

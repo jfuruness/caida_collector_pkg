@@ -1,6 +1,6 @@
 """Functions to determine customer cone size"""
 
-from typing import Dict
+from typing import Dict, List, Set
 
 from .base_as import AS
 
@@ -9,8 +9,8 @@ def _get_customer_cone_size(self):
     """Gets the AS rank by customer cone, the same way Caida does it"""
 
     # Recursively assign the customer cone size
-    non_edges = []
-    cone_dict = {}
+    non_edges: List[AS] = []
+    cone_dict: Dict[int, Set[int]] = {}
     for as_obj in self:
         if as_obj.stub or as_obj.multihomed:
             as_obj.customer_cone_size = 0
@@ -18,11 +18,13 @@ def _get_customer_cone_size(self):
         else:
             non_edges.append(as_obj)
     for as_obj in non_edges:
-        customer_cone = self._get_cone_size_helper(as_obj, cone_dict)
+        customer_cone: Set[int] = self._get_cone_size_helper(as_obj, cone_dict)
         as_obj.customer_cone_size = len(customer_cone)
 
 
-def _get_cone_size_helper(self, as_obj: AS, cone_dict: Dict[int, set]) -> AS:
+def _get_cone_size_helper(self,
+                          as_obj: AS,
+                          cone_dict: Dict[int, Set[int]]) -> Set[int]:
     """Recursively determines the cone size of an as"""
 
     if as_obj.asn in cone_dict:
