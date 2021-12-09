@@ -58,7 +58,11 @@ class TestReadFileFuncs:
             # Write cache file
             self.test_write_cache_file_mock(mock_caida_collector, decoded_path)
         else:
-            mock_caida_collector.cache_path.unlink(missing_ok=True)
+            try:
+                # Python3.8 onwards use missing_ok=True
+                mock_caida_collector.cache_path.unlink()
+            except FileNotFoundError:
+                pass
 
         with decoded_path.open(mode="r") as f:
             decoded: List[str] = [x.strip() for x in f.readlines()]

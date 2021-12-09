@@ -3,3 +3,8 @@ pytest==6.2.5
 PyYAML==6.0
 requests==2.26.0
 yamlable==1.0.4
+pytest-cov
+mypy
+flake8
+tox
+types-requests
