@@ -37,7 +37,7 @@ class TestCaidaCollector:
             # Write cache file from mocked
             if mock:
                 read_tester.test_write_cache_file_mock(  # type: ignore
-                    mock_caida_collector,decoded_path)
+                    mock_caida_collector, decoded_path)
             # Write real cache file
             else:
                 read_tester.test_write_cache_file(  # type: ignore

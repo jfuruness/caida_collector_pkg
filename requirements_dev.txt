@@ -2,9 +2,9 @@ beautifulsoup4==4.10.0
 pytest==6.2.5
 PyYAML==6.0
 requests==2.26.0
+types-requests==2.26.1
 yamlable==1.0.4
-pytest-cov
-mypy
-flake8
-tox
-types-requests
+pytest-cov==3.0.0
+mypy==0.910
+flake8==4.0.1
+tox==3.24.4

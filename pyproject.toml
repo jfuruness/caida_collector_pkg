@@ -9,9 +9,10 @@ python_functions = ["test*"]
 addopts = "--cov=lib_caida_collector"
 markers = [
     "slow",  # All slow tests
-    "read_file_funcs",  # Reading caida files
+    "caida_collector_base_funcs",  # other funcs in caida collector
     "data_extraction_funcs",  # Related to reading data from file
-    "caida_collector_base_funcs"  # other funcs in caida collector
+    "html_funcs",  # Funcs related to html
+    "read_file_funcs",  # Reading caida files
 ]
 
 [tool.mypy]

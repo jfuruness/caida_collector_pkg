@@ -1,4 +1,4 @@
-from typing import List, Set, Tuple
+from typing import Set, Tuple
 
 from ..links import CustomerProviderLink as CPLink
 from ..links import PeerLink
