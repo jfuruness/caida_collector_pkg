@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 from shutil import copyfile
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +35,7 @@ def decoded_path() -> Path:
 
 @pytest.fixture()
 def tsv_path(tmp_path) -> Path:
-    return tmp_path / "test.tsv"
+    return tmp_path / "test.tsv"  # type: ignore
 
 
 # https://stackoverflow.com/a/28507806/8903959
@@ -67,7 +67,9 @@ def mocked_download_file(self, url: str, path: str):
 
 
 @pytest.fixture(scope="function")
-def run_kwargs(tmp_path: Path) -> Dict[str, Any]:
+def run_kwargs(tmp_path: Path) -> Generator[Dict[str, Any],
+                                            Dict[str, Any],
+                                            None]:
     """Returns run kwargs for caida collector"""
 
     yield {"dl_time": _dl_time,

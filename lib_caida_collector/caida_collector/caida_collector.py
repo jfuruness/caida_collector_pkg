@@ -1,10 +1,9 @@
 from csv import DictWriter
 from datetime import datetime, timedelta
 import logging
-import os
 from pathlib import Path
 import shutil
-from typing import List, Optional, Type
+from typing import List, Optional, Tuple, Type
 
 
 from ..graph import AS, BGPDAG
@@ -38,7 +37,6 @@ class CaidaCollector:
     _read_from_caida = _read_from_caida
     _download_bz2_file = _download_bz2_file
     _copy_to_cache = _copy_to_cache
-
 
     # HTML funcs
     _get_url = _get_url
@@ -76,9 +74,9 @@ class CaidaCollector:
             raise
 
     def _run(self,
-            dl_time: Optional[datetime],
-            cache_dir: Path,
-            tsv_path: Optional[Path]) -> BGPDAG:
+             dl_time_arg: Optional[datetime],
+             cache_dir: Path,
+             tsv_path: Optional[Path]) -> BGPDAG:
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
@@ -88,18 +86,21 @@ class CaidaCollector:
         """
 
         # Get the download time
-        dl_time: datetime = dl_time if dl_time else self.default_dl_time()
+        if dl_time_arg:
+            dl_time: datetime = dl_time_arg
+        else:
+            dl_time = self.default_dl_time()
 
         if cache_dir:
             # Make cache dir if cache is being used
             cache_dir.mkdir(parents=True, exist_ok=True)
             # Path to the cache file for that day
-            cache_path: Optional[Path] = cache_dir / dl_time.strftime("%Y.%m.%d")
+            fmt = "%Y.%m.%d"
+            cache_path: Optional[Path] = cache_dir / dl_time.strftime(fmt)
         else:
-            cache_path: Optional[Path] = None
+            cache_path = None
 
-
-        file_lines: List[str] = self.read_file(cache_path, dl_time)
+        file_lines: Tuple[str, ...] = self.read_file(cache_path, dl_time)
         (cp_links,
          peer_links,
          ixps,

@@ -21,7 +21,11 @@ class TestCaidaCollector:
                  tsv_path: Path,
                  write_tsv: bool,
                  cache_written: bool,
-                 mock: bool):
+                 mock: bool,
+                 # Delete these
+                 tmp_caida_collector,
+                 cache,
+                 tsv):
         """Just runs with every possible param and cache
 
         test_run_manual_checks should replace this
@@ -32,11 +36,12 @@ class TestCaidaCollector:
             read_tester = TestReadFileFuncs()
             # Write cache file from mocked
             if mock:
-                read_tester.test_write_cache_file_mock(mock_caida_collector,
-                                                       decoded_path)
+                read_tester.test_write_cache_file_mock(  # type: ignore
+                    mock_caida_collector,decoded_path)
             # Write real cache file
             else:
-                read_tester.test_write_cache_file(tmp_caida_collector)
+                read_tester.test_write_cache_file(  # type: ignore
+                    tmp_caida_collector)
 
         collector = mock_caida_collector if mock else tmp_caida_collector
         collector.run(cache=cache, tsv=tsv)

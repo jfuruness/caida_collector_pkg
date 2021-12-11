@@ -15,7 +15,7 @@ class TestDataExtractionFuncs:
         """Tests that _get_ases returns correctly from example file"""
 
         with decoded_path.open(mode="r") as f:
-            lines = [x.strip() for x in f.readlines()]
+            lines = tuple([x.strip() for x in f.readlines()])
         (cp_links,
          peer_links,
          ixps,

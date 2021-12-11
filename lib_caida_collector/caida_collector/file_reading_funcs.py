@@ -24,10 +24,10 @@ def read_file(self,
 
     # If cache exists
     if cache_path and cache_path.exists():
-        lines = self._read_from_cache(cache_path)
+        lines: LINES_TYPE = self._read_from_cache(cache_path)
     else:
         # Write the raw file
-        lines = self._read_from_caida(dl_time)
+        lines: LINES_TYPE = self._read_from_caida(dl_time)  # type: ignore
         # Copies to cache if cache_path is set
         self._copy_to_cache(cache_path, lines)
 
@@ -51,7 +51,7 @@ def _read_from_caida(self, dl_time: datetime) -> LINES_TYPE:
     # Create a temporary dir to write to
     with TemporaryDirectory() as tmp_dir:
         # Path to bz2 download
-        bz2_path: Path = os.path.join(tmp_dir, "download.bz2")
+        bz2_path: str = os.path.join(tmp_dir, "download.bz2")
         # Download Bz2
         self._download_bz2_file(self._get_url(dl_time), bz2_path)
 
