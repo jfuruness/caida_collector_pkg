@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
+import shutil
 from typing import List, Optional, Type
 
 
@@ -12,8 +13,10 @@ from ..graph import AS, BGPDAG
 # https://github.com/python/mypy/issues/7045
 # File funcs
 from .file_reading_funcs import read_file
-from .file_reading_funcs import _write_cache_file
+from .file_reading_funcs import _read_from_cache
+from .file_reading_funcs import _read_from_caida
 from .file_reading_funcs import _download_bz2_file
+from .file_reading_funcs import _copy_to_cache
 
 # HTML funcs
 from .html_funcs import _get_url
@@ -31,8 +34,11 @@ class CaidaCollector:
     """Downloads relationships, determines metadata, and inserts to db"""
 
     read_file = read_file
-    _write_cache_file = _write_cache_file
+    _read_from_cache = _read_from_cache
+    _read_from_caida = _read_from_caida
     _download_bz2_file = _download_bz2_file
+    _copy_to_cache = _copy_to_cache
+
 
     # HTML funcs
     _get_url = _get_url
@@ -46,43 +52,33 @@ class CaidaCollector:
     _extract_peers = _extract_peers
 
     def __init__(self,
-                 dl_time: Optional[datetime] = None,
-                 base_dir: Optional[Path] = None,
-                 dir_: Optional[Path] = None,
                  BaseASCls: Type[AS] = AS,
-                 GraphCls: Type[BGPDAG] = BGPDAG,
-                 cache_dir: Path = Path("/tmp/caida_collector_cache"),
-                 **kwargs):
+                 GraphCls: Type[BGPDAG] = BGPDAG):
 
-        self.dl_time: datetime = dl_time if dl_time else self.default_dl_time()
-
-        # Set up base directory
-        if base_dir:
-            self.base_dir: Path = base_dir  # type: ignore
-        elif dir_:
-            self.base_dir: Path = dir_  # type: ignore
-        else:
-            self.base_dir: Path = Path("/tmp/")  # type: ignore
-
-        # Set up directory
-        name: str = self.__class__.__name__
-        t_str: str = datetime.now().strftime("%Y.%m.%d.%H.%M.%S.%f")
-        uid: str = f"{t_str}_{os.getpid()}"
-        self.dir_: Path = dir_ if dir_ else self.base_dir / f"{name}.{uid}"
-        self.dir_.mkdir(parents=True, exist_ok=True)
-
-        # TSV path
-        self.tsv_path: Path = self.dir_ / f"{name}.tsv"
-
+        # Base AS Class for the BGPDAG
         self.BaseASCls: Type[AS] = BaseASCls
+        # BGPDAG class
         self.GraphCls: Type[BGPDAG] = GraphCls
-        self.cache_dir: Path = cache_dir
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        fmt: str = "%Y.%m.%d"
-        self.cache_path: Path = self.cache_dir / self.dl_time.strftime(fmt)
+    def run(self,
+            dl_time: Optional[datetime] = None,
+            cache_dir: Path = Path("/tmp/caida_collector_cache"),
+            tsv_path: Optional[Path] = None):
+        """Runs run func and deletes cache if anything is amiss"""
 
-    def run(self, cache: bool = True, tsv: bool = True) -> BGPDAG:
+        try:
+            self._run(dl_time, cache_dir, tsv_path)
+        except Exception as e:
+            logging.critical(f"{e}: Potentially the result of a messed up"
+                             "cache, which was just deleted. please try again")
+            # MAke sure no matter what don't create a messed up cache
+            shutil.rmtree(cache_dir)
+            raise
+
+    def _run(self,
+            dl_time: Optional[datetime],
+            cache_dir: Path,
+            tsv_path: Optional[Path]) -> BGPDAG:
         """Downloads relationships, parses data, and inserts into the db.
 
         https://publicdata.caida.org/datasets/as-relationships/serial-2/
@@ -91,15 +87,30 @@ class CaidaCollector:
         if cache is True it uses the downloaded file that was cached
         """
 
-        file_lines: List[str] = self.read_file(cache)
-        cp_links, peer_links, ixps, input_clique = self._get_ases(file_lines)
+        # Get the download time
+        dl_time: datetime = dl_time if dl_time else self.default_dl_time()
+
+        if cache_dir:
+            # Make cache dir if cache is being used
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            # Path to the cache file for that day
+            cache_path: Optional[Path] = cache_dir / dl_time.strftime("%Y.%m.%d")
+        else:
+            cache_path: Optional[Path] = None
+
+
+        file_lines: List[str] = self.read_file(cache_path, dl_time)
+        (cp_links,
+         peer_links,
+         ixps,
+         input_clique) = self._get_ases(file_lines)
         bgp_dag: BGPDAG = self.GraphCls(cp_links,
                                         peer_links,
                                         ixps=ixps,
                                         input_clique=input_clique,
                                         BaseASCls=self.BaseASCls)
-        if tsv:
-            self._write_tsv(bgp_dag)
+        if tsv_path:
+            self._write_tsv(bgp_dag, tsv_path)
         return bgp_dag
 
     def default_dl_time(self) -> datetime:
@@ -114,11 +125,11 @@ class CaidaCollector:
         dl_time: datetime = datetime.utcnow() - timedelta(days=10)
         return dl_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    def _write_tsv(self, dag: BGPDAG):
+    def _write_tsv(self, dag: BGPDAG, tsv_path: Path):
         """Writes BGP DAG info to a TSV"""
 
         logging.info("Made graph. Now writing to TSV")
-        with self.tsv_path.open(mode="w") as f:
+        with tsv_path.open(mode="w") as f:
             # Get columns
             cols: List[str] = list(next(iter(dag.as_dict.values())
                                         ).db_row.keys())

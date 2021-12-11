@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 from shutil import copyfile
+from typing import Any, Dict
 from unittest.mock import patch
 
 import pytest
@@ -9,12 +10,12 @@ import pytest
 from ..caida_collector import CaidaCollector
 
 # https://stackoverflow.com/a/12233889/8903959
-file_path: str = os.path.abspath(__file__)
-example_dir: Path = Path(file_path.replace("conftest.py", "examples"))
+_file_path: str = os.path.abspath(__file__)
+_example_dir: Path = Path(_file_path.replace("conftest.py", "examples"))
 _dl_time: datetime = datetime(2021, 9, 20)
-_html_path: Path = example_dir / "serial_2.html"
-_bz2_path: Path = example_dir / "20210901.as-rel2.txt.bz2"
-_decoded_path: Path = example_dir / "20210901.as-rel2.decoded"
+_html_path: Path = _example_dir / "serial_2.html"
+_bz2_path: Path = _example_dir / "20210901.as-rel2.txt.bz2"
+_decoded_path: Path = _example_dir / "20210901.as-rel2.decoded"
 
 
 @pytest.fixture(scope="function")
@@ -30,6 +31,11 @@ def bz2_path() -> Path:
 @pytest.fixture(scope="function")
 def decoded_path() -> Path:
     return _decoded_path
+
+
+@pytest.fixture()
+def tsv_path(tmp_path) -> Path:
+    return tmp_path / "test.tsv"
 
 
 # https://stackoverflow.com/a/28507806/8903959
@@ -60,19 +66,17 @@ def mocked_download_file(self, url: str, path: str):
     copyfile(str(_bz2_path), path)
 
 
-def _clear_collector_paths(collector):
-    """Clears cache and tsv paths"""
+@pytest.fixture(scope="function")
+def run_kwargs(tmp_path: Path) -> Dict[str, Any]:
+    """Returns run kwargs for caida collector"""
 
-    for path in (collector.cache_path, collector.tsv_path):
-        try:
-            # python 3.8 and onwards use missing_ok=True
-            path.unlink()
-        except FileNotFoundError:
-            pass
+    yield {"dl_time": _dl_time,
+           "cache_dir": tmp_path,
+           "tsv_path": tmp_path / "test.txt"}
 
 
 @pytest.fixture(scope="function")
-def mock_caida_collector(tmp_path: Path):
+def mock_caida_collector():
     """Returns a CaidaCollector obj that has custom input files
 
     Clears cache and tsv before yielding"""
@@ -82,25 +86,13 @@ def mock_caida_collector(tmp_path: Path):
         with patch(("lib_caida_collector.caida_collector."
                     "CaidaCollector._download_bz2_file"),
                    mocked_download_file):
-            collector: CaidaCollector = CaidaCollector(dir_=tmp_path,
-                                                       dir_exist_ok=True,
-                                                       dl_time=_dl_time)
-
-            _clear_collector_paths(collector)
-
-            yield collector
+            yield CaidaCollector()
 
 
 @pytest.fixture(scope="function")
-def tmp_caida_collector(tmp_path: Path) -> CaidaCollector:
-    """Returns a CaidaCollector obj that has _dir=tmp_path
+def caida_collector():
+    """Returns a CaidaCollector obj that has custom input files
 
-    Also clears all paths
-    """
+    Clears cache and tsv before yielding"""
 
-    collector: CaidaCollector = CaidaCollector(dir_=tmp_path,
-                                               dir_exist_ok=True,
-                                               dl_time=_dl_time)
-
-    _clear_collector_paths(collector)
-    return collector
+    return CaidaCollector()

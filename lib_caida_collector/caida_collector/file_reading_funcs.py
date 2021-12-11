@@ -1,47 +1,81 @@
+from datetime import datetime
 import logging
+import os
 from pathlib import Path
 import shutil
-from typing import List
+from tempfile import TemporaryDirectory
+from typing import Optional, Tuple
 
 import bz2
 import requests
 
 
-def read_file(self, cache: bool = True) -> List[str]:
+# Type for lines that are read from caida/cached files
+LINES_TYPE = Tuple[str, ...]
+
+
+def read_file(self,
+              cache_path: Optional[Path],
+              dl_time: datetime) -> LINES_TYPE:
     """Reads the file from the URL and unzips it and returns the lines
 
     Also caches the file for later calls
     """
 
-    if not self.cache_path.exists() or cache is False:
-        self._write_cache_file()
+    # If cache exists
+    if cache_path and cache_path.exists():
+        lines = self._read_from_cache(cache_path)
+    else:
+        # Write the raw file
+        lines = self._read_from_caida(dl_time)
+        # Copies to cache if cache_path is set
+        self._copy_to_cache(cache_path, lines)
 
-    with self.cache_path.open(mode="r") as f:
-        return [x.strip() for x in f.readlines()]
+    return lines
 
 
-def _write_cache_file(self):
-    """Writes the downloaded file to the cache"""
+def _read_from_cache(self, cache_path: Path) -> LINES_TYPE:
+    """Reads from the cache"""
+
+    # Open cache
+    with cache_path.open(mode="r") as f:
+        # Read cached file
+        return tuple([x.strip() for x in f])
+
+
+def _read_from_caida(self, dl_time: datetime) -> LINES_TYPE:
+    """Reads Caida file"""
 
     logging.info("No file cached from Caida. Downloading Caida file now")
 
-    bz2_path: Path = self.dir_ / "download.bz2"
+    # Create a temporary dir to write to
+    with TemporaryDirectory() as tmp_dir:
+        # Path to bz2 download
+        bz2_path: Path = os.path.join(tmp_dir, "download.bz2")
+        # Download Bz2
+        self._download_bz2_file(self._get_url(dl_time), bz2_path)
 
-    self._download_bz2_file(self._get_url(), bz2_path)
-
-    # Unzip and read
-    with bz2.open(bz2_path) as bz2_f, self.cache_path.open(mode="w") as cachef:
-        # Must decode the bytes into strings
-        for bz2_line in bz2_f.readlines():
-            cachef.write(bz2_line.decode())
+        # Unzip and read
+        with bz2.open(bz2_path, mode="rb") as f:
+            # Must decode the bytes into strings and strip
+            return tuple([x.decode().strip() for x in f])
 
 
-def _download_bz2_file(self, url: str, bz2_path: Path):
-    """Downloads file"""
+def _download_bz2_file(self, url: str, bz2_path: str):
+    """Downloads Caida BZ2 file"""
 
     # https://stackoverflow.com/a/39217788/8903959
     # Download the file
     with requests.get(url, stream=True, timeout=60) as r:
         r.raise_for_status()
-        with bz2_path.open(mode="wb") as f:
+        with open(bz2_path, mode="wb") as f:
             shutil.copyfileobj(r.raw, f)
+
+
+def _copy_to_cache(self, cache_path: Optional[Path], lines: LINES_TYPE):
+    """Copies file to the cache"""
+
+    if cache_path:
+        # Copy raw file to cache
+        with cache_path.open(mode="w") as f:
+            f.writelines(lines)
