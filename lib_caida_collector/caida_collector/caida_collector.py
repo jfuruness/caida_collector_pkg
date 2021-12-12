@@ -61,7 +61,7 @@ class CaidaCollector:
     def run(self,
             dl_time: Optional[datetime] = None,
             cache_dir: Path = Path("/tmp/caida_collector_cache"),
-            tsv_path: Optional[Path] = None):
+            tsv_path: Optional[Path] = Path("/tmp/caida_collector.tsv")):
         """Runs run func and deletes cache if anything is amiss"""
 
         try:
