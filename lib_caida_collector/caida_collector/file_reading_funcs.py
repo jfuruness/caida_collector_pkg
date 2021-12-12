@@ -66,7 +66,7 @@ def _download_bz2_file(self, url: str, bz2_path: str):
 
     # https://stackoverflow.com/a/39217788/8903959
     # Download the file
-    with requests.get(url, stream=True, timeout=60) as r:
+    with requests.get(url, stream=True, timeout=5) as r:
         r.raise_for_status()
         with open(bz2_path, mode="wb") as f:
             shutil.copyfileobj(r.raw, f)
@@ -78,4 +78,4 @@ def _copy_to_cache(self, cache_path: Optional[Path], lines: LINES_TYPE):
     if cache_path:
         # Copy raw file to cache
         with cache_path.open(mode="w") as f:
-            f.writelines(lines)
+            f.write("\n".join(lines))

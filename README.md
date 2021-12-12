@@ -88,6 +88,7 @@ tox
 
 ## History
 * [lib\_caida\_collector](#lib_caida_collector)
+* 0.0.6 Fixed bug where file was not cached properly
 * 0.0.5 First relatively stable version (still needs testing and a few other fixes)
 
 ## Credits
