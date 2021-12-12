@@ -88,6 +88,8 @@ tox
 
 ## History
 * [lib\_caida\_collector](#lib_caida_collector)
+* 0.0.62 fixed bug where customers and providers where swapped
+* 0.0.61 Fixed bug where BGPDAG was not returned
 * 0.0.6 Fixed bug where file was not cached properly
 * 0.0.5 First relatively stable version (still needs testing and a few other fixes)
 

@@ -11,13 +11,15 @@ else:
 SETUP_REL = Optional[Set[ASTypeHint]]
 REL = Tuple[ASTypeHint, ...]
 
+SLOTS = ("asn", "peers", "customers", "providers", "input_clique",
+         "ixp", "customer_cone_size", "propagation_rank")
+
 
 @yaml_info(yaml_tag='AS')
 class AS(YamlAble):
     """Autonomous System class. Contains attributes of an AS"""
 
-    __slots__ = ["asn", "peers", "customers", "providers", "input_clique",
-                 "ixp", "customer_cone_size", "propagation_rank"]
+    __slots__ = SLOTS
 
     subclass_to_name_dict: Dict[Type[ASTypeHint], str] = {}
     name_to_subclass_dict: Dict[str, Type[ASTypeHint]] = {}
@@ -93,8 +95,11 @@ class AS(YamlAble):
             else:
                 raise Exception(f"improper format type: {type(x)} {x}")
 
-        attrs = self.__slots__ + ["stubs", "stub", "multihomed", "transit"]
+        attrs = SLOTS + ("stubs", "stub", "multihomed", "transit")
         return {attr: _format(getattr(self, attr)) for attr in attrs}
+
+    def __str__(self):
+        return "\n".join(str(x) for x in self.db_row.items())
 
     @property
     def stub(self) -> bool:
@@ -134,9 +139,9 @@ class AS(YamlAble):
     def __to_yaml_dict__(self) -> Dict[str, Any]:
         """ This optional method is called when you call yaml.dump()"""
         return {"asn": self.asn,
-                "customers": [x.asn for x in self.customers],
-                "peers": [x.asn for x in self.peers],
-                "providers": [x.asn for x in self.providers],
+                "customers": tuple([x.asn for x in self.customers]),
+                "peers": tuple([x.asn for x in self.peers]),
+                "providers": tuple([x.asn for x in self.providers]),
                 "input_clique": self.input_clique,
                 "ixp": self.ixp,
                 "customer_cone_size": self.customer_cone_size,

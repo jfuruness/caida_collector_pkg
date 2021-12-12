@@ -65,7 +65,7 @@ def _add_relationships(self,
 def _make_relationships_tuples(self):
     """Make relationships tuples"""
 
-    rel_attrs = ("peers", "customers", "providers")
+    rel_attrs = ("peers", "providers", "customers")
     setup_rel_attrs = ("peers_setup_set",
                        "providers_setup_set",
                        "customers_setup_set")

@@ -65,7 +65,7 @@ class CaidaCollector:
         """Runs run func and deletes cache if anything is amiss"""
 
         try:
-            self._run(dl_time, cache_dir, tsv_path)
+            return self._run(dl_time, cache_dir, tsv_path)
         except Exception as e:
             logging.critical(f"{e}: Potentially the result of a messed up"
                              "cache, which was just deleted. please try again")
