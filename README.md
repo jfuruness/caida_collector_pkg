@@ -38,7 +38,15 @@ TODO
 ## Installation
 * [lib\_caida\_collector](#lib_caida_collector)
 
-Install python and pip if you have not already. Then run:
+Install python and pip if you have not already. 
+
+Make sure to upgrade pip with
+
+```bash
+pip3 install pip --upgrade
+```
+
+Then run:
 
 ```bash
 pip3 install git@github.com:jfuruness/lib_caida_collector.git
