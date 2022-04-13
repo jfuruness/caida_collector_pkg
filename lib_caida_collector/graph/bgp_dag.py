@@ -32,7 +32,8 @@ class BGPDAG(YamlAble):
 
     # Slots are used here to allow for fast access (1/3 faster)
     # And also because it allows others to easily see the instance attrs
-    __slots__ = ("as_dict", "propagation_ranks", "ases")
+    __slots__ = ("as_dict", "propagation_ranks", "ases",
+                 "stub_asns", "mh_asns", "input_clique_asns", "etc_asns")
 
     # Graph building functionality
     _gen_graph = _gen_graph
@@ -111,6 +112,13 @@ class BGPDAG(YamlAble):
             # Determine customer cones of all ases
             self._get_customer_cone_size()
             logging.debug("Customer cones complete")
+
+        # Some helpful sets of asns
+        self.stub_asns = set([x.asn for x in self if x.stub])
+        self.mh_asns = set([x.asn for x in self if x.multihomed])
+        self.input_clique_asns = set([x.asn for x in self if x.input_clique])
+        self.etc_asns = set([x.asn for x in self if not
+                             (x.stub or x.multihomed or x.input_clique)])
 
 ##############
 # Yaml funcs #
