@@ -116,7 +116,7 @@ class BGPDAG(YamlAble):
         # Some helpful sets of asns
         self.stub_asns = set([x.asn for x in self if x.stub])
         self.mh_asns = set([x.asn for x in self if x.multihomed])
-        self.stub_or_mh_asns = self.stub_asns | self.mh_asns
+        self.stub_or_mh_asns = set(self.stub_asns | self.mh_asns)
         self.input_clique_asns = set([x.asn for x in self if x.input_clique])
         self.etc_asns = set([x.asn for x in self if not
                              (x.stub or x.multihomed or x.input_clique)])
