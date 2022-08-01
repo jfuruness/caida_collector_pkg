@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 python_files = ["test*.py"]
 python_classes = ["Test*"]
 python_functions = ["test*"]
-addopts = "--cov=lib_caida_collector"
+addopts = "--cov=caida_collector_pkg"
 markers = [
     "slow",  # All slow tests
     "caida_collector_base_funcs",  # other funcs in caida collector
@@ -16,7 +16,7 @@ markers = [
 ]
 
 [tool.mypy]
-mypy_path = "lib_caida_collector"
+mypy_path = "caida_collector_pkg"
 check_untyped_defs = true
 disallow_any_generics = true
 ignore_missing_imports = true

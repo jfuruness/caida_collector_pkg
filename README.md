@@ -4,9 +4,9 @@
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
-![Tests](https://github.com/jfuruness/lib_caida_collector/actions/workflows/tests.yml/badge.svg)
+![Tests](https://github.com/jfuruness/caida_collector_pkg/actions/workflows/tests.yml/badge.svg)
 
-# lib\_caida\_collector
+# caida\_collector\_pkg
 This package downloads relationship data from Caida's serial-2 dataset. It caches this information, and creates a BGP DAG from this.
 
 * [Description](#package-description)
@@ -24,19 +24,19 @@ This package downloads relationship data from Caida's serial-2 dataset. It cache
 TODO
 
 ## Usage
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 From the command line, to download to /tmp/caida_collector.tsv:
 
 ```bash
-lib_caida_collector
+caida_collector_pkg
 ```
 
 In a script:
 TODO
 
 ## Installation
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 Install python and pip if you have not already. 
 
@@ -49,15 +49,15 @@ pip3 install pip --upgrade
 Then run:
 
 ```bash
-pip3 install git@github.com:jfuruness/lib_caida_collector.git
+pip3 install git@github.com:jfuruness/caida_collector_pkg.git
 ```
 
 This will install the package and all of it's python dependencies.
 
 If you want to install the project for development:
 ```bash
-git clone https://github.com/jfuruness/lib_caida_collector.git
-cd lib_caida_collector
+git clone https://github.com/jfuruness/caida_collector_pkg.git
+cd caida_collector_pkg
 pip3 install -e .[test]
 ```
 
@@ -65,27 +65,27 @@ To test the development package: [Testing](#testing)
 
 
 ## Testing
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 To test the package after installation:
 
 ```
-cd lib_caida_collector
-pytest lib_caida_collector
-flake8 lib_caida_collector
-mypy lib_caida_collector
+cd caida_collector_pkg
+pytest caida_collector_pkg
+flake8 caida_collector_pkg
+mypy caida_collector_pkg
 ```
 
 If you want to run it across multiple environments, and have python 3.6-3.9 installed:
 
 ```
-cd lib_caida_collector
+cd caida_collector_pkg
 tox
 ```
 
 
 ## Development/Contributing
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 1. Fork it!
 2. Create your feature branch: `git checkout -b my-new-feature`
@@ -95,7 +95,8 @@ tox
 6. Email me at jfuruness@gmail.com
 
 ## History
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
+* 0.1.0 Changed the name, added Manifest.in, updated deps
 * 0.0.63 Versioned up yamlable for Python3.10 compatability
 * 0.0.62 fixed bug where customers and providers where swapped
 * 0.0.61 Fixed bug where BGPDAG was not returned
@@ -103,16 +104,16 @@ tox
 * 0.0.5 First relatively stable version (still needs testing and a few other fixes)
 
 ## Credits
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 Thanks to Matt Jaccino and Tony Zheng, who helped with the original version of this located in lib_bgp_data
 
 ## License
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 BSD License (see license file)
 
 ## TODO
-* [lib\_caida\_collector](#lib_caida_collector)
+* [caida\_collector\_pkg](#caida_collector_pkg)
 
 See Jira
