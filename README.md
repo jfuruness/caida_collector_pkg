@@ -38,7 +38,7 @@ TODO
 ## Installation
 * [caida\_collector\_pkg](#caida_collector_pkg)
 
-Install python and pip if you have not already. 
+Install python and pip if you have not already.
 
 Make sure to upgrade pip with
 
@@ -96,6 +96,7 @@ tox
 
 ## History
 * [caida\_collector\_pkg](#caida_collector_pkg)
+* 0.1.1 Changed convience asn lists to be AS classes. Added ROV info
 * 0.1.0 Changed the name, added Manifest.in, updated deps
 * 0.0.63 Versioned up yamlable for Python3.10 compatability
 * 0.0.62 fixed bug where customers and providers where swapped
