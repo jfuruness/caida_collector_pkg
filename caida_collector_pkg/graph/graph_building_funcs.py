@@ -1,5 +1,7 @@
 """Gontains functions needed to build graph and it's references"""
 
+import csv
+from pathlib import Path
 from typing import Set, Type
 
 from .base_as import AS
@@ -76,3 +78,15 @@ def _make_relationships_tuples(self):
             setattr(as_obj, rel_attr, tuple(getattr(as_obj, setup_rel_attr)))
             # Delete the setup attribute
             delattr(as_obj, setup_rel_attr)
+
+
+def _add_extra_csv_info(self, path: Path):
+    """Adds info from CSVs to ASNs"""
+
+    with path.open() as f:
+        for row in csv.DictReader(f):
+            as_ = self.asn_dict.get(row["asn"])
+            if as_ is not None:
+                as_.rov_filtering = row["filtering"]
+                as_.rov_confidence = float(row["confidence"])
+                as_.rov_source = row["source"]

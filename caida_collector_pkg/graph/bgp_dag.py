@@ -15,6 +15,7 @@ from ..links import PeerLink
 from .graph_building_funcs import _gen_graph
 from .graph_building_funcs import _add_relationships
 from .graph_building_funcs import _make_relationships_tuples
+from .graph_building_funcs import _add_extra_csv_info
 
 # propagation rank building funcs
 from .propagation_rank_funcs import _assign_propagation_ranks
@@ -39,6 +40,7 @@ class BGPDAG(YamlAble):
     _gen_graph = _gen_graph
     _add_relationships = _add_relationships
     _make_relationships_tuples = _make_relationships_tuples
+    _add_extra_csv_info = _add_extra_csv_info
 
     # propagation rank building funcs
     _assign_propagation_ranks = _assign_propagation_ranks
@@ -65,6 +67,8 @@ class BGPDAG(YamlAble):
                  input_clique: Optional[Set[int]] = None,
                  BaseASCls: Type[AS] = AS,
                  yaml_as_dict: Optional[Dict[int, AS]] = None,
+                 csv_path: Path = (Path(__file__).parent.parent.parent
+                                   / "scripts" / "rov_ases" / "combined.csv"),
                  ):
         """Reads in relationship data from a TSV and generate graph"""
 
@@ -112,13 +116,14 @@ class BGPDAG(YamlAble):
             # Determine customer cones of all ases
             self._get_customer_cone_size()
             logging.debug("Customer cones complete")
+            self._add_extra_csv_info(csv_path)
 
         # Some helpful sets of asns
-        self.stub_asns = set([x.asn for x in self if x.stub])
-        self.mh_asns = set([x.asn for x in self if x.multihomed])
-        self.stub_or_mh_asns = set(self.stub_asns | self.mh_asns)
-        self.input_clique_asns = set([x.asn for x in self if x.input_clique])
-        self.etc_asns = set([x.asn for x in self if not
+        self.stub_ases = set([x for x in self if x.stub])
+        self.mh_ases = set([x for x in self if x.multihomed])
+        self.stub_or_mh_ases = set(self.stub_asns | self.mh_asns)
+        self.input_clique_ases = set([x for x in self if x.input_clique])
+        self.etc_ases = set([x for x in self if not
                              (x.stub or x.multihomed or x.input_clique)])
 
 ##############

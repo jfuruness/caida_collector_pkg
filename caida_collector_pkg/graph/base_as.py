@@ -12,7 +12,8 @@ SETUP_REL = Optional[Set[ASTypeHint]]
 REL = Tuple[ASTypeHint, ...]
 
 SLOTS = ("asn", "peers", "customers", "providers", "input_clique",
-         "ixp", "customer_cone_size", "propagation_rank")
+         "ixp", "customer_cone_size", "propagation_rank",
+         "rov_filtering", "rov_confidence", "rov_source")
 
 
 @yaml_info(yaml_tag='AS')
@@ -69,6 +70,10 @@ class AS(YamlAble):
         self.customer_cone_size: Optional[int] = customer_cone_size
         # Propagation rank. Rank leaves to clique
         self.propagation_rank: Optional[int] = propagation_rank
+
+        self.rov_filtering: str = ""
+        self.rov_confidence: floatb = -1
+        self.rov_source: str = ""
 
     def __lt__(self, as_obj: Any) -> bool:
         if isinstance(as_obj, AS):
