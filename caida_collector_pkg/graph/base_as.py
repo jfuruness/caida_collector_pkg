@@ -72,7 +72,7 @@ class AS(YamlAble):
         self.propagation_rank: Optional[int] = propagation_rank
 
         self.rov_filtering: str = ""
-        self.rov_confidence: floatb = -1
+        self.rov_confidence: float = -1
         self.rov_source: str = ""
 
     def __lt__(self, as_obj: Any) -> bool:

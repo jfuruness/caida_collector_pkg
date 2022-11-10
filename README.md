@@ -96,6 +96,7 @@ tox
 
 ## History
 * [caida\_collector\_pkg](#caida_collector_pkg)
+* 0.1.2 Syntax fixes
 * 0.1.1 Changed convience asn lists to be AS classes. Added ROV info
 * 0.1.0 Changed the name, added Manifest.in, updated deps
 * 0.0.63 Versioned up yamlable for Python3.10 compatability

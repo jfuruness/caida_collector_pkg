@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any, Dict, Optional, Set, Tuple, Type
 
 from yamlable import yaml_info, YamlAble, yaml_info_decorate
@@ -34,7 +35,8 @@ class BGPDAG(YamlAble):
     # Slots are used here to allow for fast access (1/3 faster)
     # And also because it allows others to easily see the instance attrs
     __slots__ = ("as_dict", "propagation_ranks", "ases",
-                 "stub_asns", "mh_asns", "input_clique_asns", "etc_asns")
+                 "stub_asns", "mh_asns", "input_clique_asns", "etc_asns",
+                 "stub_ases", "mh_ases", "input_clique_ases", "etc_ases")
 
     # Graph building functionality
     _gen_graph = _gen_graph
@@ -121,9 +123,16 @@ class BGPDAG(YamlAble):
         # Some helpful sets of asns
         self.stub_ases = set([x for x in self if x.stub])
         self.mh_ases = set([x for x in self if x.multihomed])
-        self.stub_or_mh_ases = set(self.stub_asns | self.mh_asns)
+        self.stub_or_mh_ases = set(self.stub_ases | self.mh_ases)
         self.input_clique_ases = set([x for x in self if x.input_clique])
         self.etc_ases = set([x for x in self if not
+                             (x.stub or x.multihomed or x.input_clique)])
+        # Backwards compatibility
+        self.stub_asns = set([x.asn for x in self if x.stub])
+        self.mh_asns = set([x.asn for x in self if x.multihomed])
+        self.stub_or_mh_asns = set(self.stub_asns | self.mh_asns)
+        self.input_clique_asns = set([x.asn for x in self if x.input_clique])
+        self.etc_asns = set([x.asn for x in self if not
                              (x.stub or x.multihomed or x.input_clique)])
 
 ##############
