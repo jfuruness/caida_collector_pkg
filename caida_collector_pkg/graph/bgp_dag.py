@@ -69,8 +69,8 @@ class BGPDAG(YamlAble):
                  input_clique: Optional[Set[int]] = None,
                  BaseASCls: Type[AS] = AS,
                  yaml_as_dict: Optional[Dict[int, AS]] = None,
-                 csv_path: Path = (Path(__file__).parent.parent.parent
-                                   / "scripts" / "rov_ases" / "combined.csv"),
+                 csv_path: Path = (Path(__file__).parent.parent
+                                   / "combined.csv"),
                  ):
         """Reads in relationship data from a TSV and generate graph"""
 
