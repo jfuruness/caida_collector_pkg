@@ -20,8 +20,6 @@ SLOTS = ("asn", "peers", "customers", "providers", "input_clique",
 class AS(YamlAble):
     """Autonomous System class. Contains attributes of an AS"""
 
-    __slots__ = SLOTS
-
     subclass_to_name_dict: Dict[Type[ASTypeHint], str] = {}
     name_to_subclass_dict: Dict[str, Type[ASTypeHint]] = {}
 
