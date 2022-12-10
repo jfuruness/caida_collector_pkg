@@ -94,7 +94,7 @@ class AS(YamlAble):
                 return asns(x)  # type: ignore
             elif x is None:
                 return ""
-            elif isinstance(x, str) or isinstance(x, int):
+            elif any(isinstance(x, my_type) for my_type in (str, int, float)):
                 return str(x)
             else:
                 raise Exception(f"improper format type: {type(x)} {x}")
