@@ -51,12 +51,14 @@ class CaidaCollector:
 
     def __init__(self,
                  BaseASCls: Type[AS] = AS,
-                 GraphCls: Type[BGPDAG] = BGPDAG):
+                 GraphCls: Type[BGPDAG] = BGPDAG,
+                 GraphCls_kwargs = dict()):
 
         # Base AS Class for the BGPDAG
         self.BaseASCls: Type[AS] = BaseASCls
         # BGPDAG class
         self.GraphCls: Type[BGPDAG] = GraphCls
+        self.GraphCls_kwargs = GraphCls_kwargs
 
     def run(self,
             dl_time: Optional[datetime] = None,
@@ -109,7 +111,8 @@ class CaidaCollector:
                                         peer_links,
                                         ixps=ixps,
                                         input_clique=input_clique,
-                                        BaseASCls=self.BaseASCls)
+                                        BaseASCls=self.BaseASCls,
+                                        **self.GraphCls_kwargs)
         if tsv_path:
             self._write_tsv(bgp_dag, tsv_path)
         return bgp_dag
