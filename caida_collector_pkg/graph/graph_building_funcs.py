@@ -87,7 +87,6 @@ def _add_extra_csv_info(self, path: Path):
         for row in csv.DictReader(f):
             as_ = self.as_dict.get(int(row["asn"]))
             if as_ is not None:
-                input("!" + row["filtering"])
                 as_.rov_filtering = row["filtering"]
                 as_.rov_confidence = float(row["confidence"])
                 as_.rov_source = row["source"]
